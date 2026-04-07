@@ -1,0 +1,1555 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>FranklinCovey — Business Case Generator</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,500;0,600;1,400&family=Inter:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+/* ══════════════════════════════════════════════════════
+   RESET + TOKENS
+══════════════════════════════════════════════════════ */
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+:root{
+  --navy:#0f2137; --navy-mid:#1a3a5c; --navy-light:#2563a8;
+  --fc-orange:#e8622a; --fc-orange-light:#fdf1ec; --fc-orange-mid:#f5a07a;
+  --cream:#faf8f5; --white:#fff; --rule:#e4e0d8;
+  --ink:#1a1a1a; --ink-mid:#4a4a4a; --ink-light:#888; --ink-faint:#bbb;
+  --green:#1a6b45; --green-light:#eaf4ee; --green-mid:#2d9966;
+  --gold:#c49a3c; --gold-light:#fdf7ec;
+  --red:#b03030; --red-light:#fdf0f0;
+  --r:3px; --rmd:5px; --rlg:8px;
+}
+html{scroll-behavior:smooth;}
+body{font-family:'Inter',sans-serif;background:var(--cream);color:var(--ink);min-height:100vh;-webkit-font-smoothing:antialiased;}
+
+/* ══════════════════════════════════════════════════════
+   HEADER
+══════════════════════════════════════════════════════ */
+.header{background:var(--navy);overflow:hidden;}
+.header-inner{display:flex;align-items:stretch;min-height:88px;}
+.hbrand{background:var(--fc-orange);padding:1.1rem 1.6rem;display:flex;flex-direction:column;justify-content:center;min-width:185px;flex-shrink:0;}
+.hbrand-name{font-family:'Playfair Display',serif;font-size:1.15rem;color:#fff;font-weight:600;line-height:1.2;}
+.hbrand-sub{font-size:0.57rem;font-weight:500;letter-spacing:.15em;text-transform:uppercase;color:rgba(255,255,255,.65);margin-top:3px;}
+.htitle{padding:1.1rem 2rem;display:flex;flex-direction:column;justify-content:center;flex:1;}
+.htitle h1{font-family:'Playfair Display',serif;font-size:1.35rem;color:#fff;font-weight:500;letter-spacing:-.01em;}
+.htitle p{font-size:0.68rem;color:rgba(255,255,255,.35);margin-top:4px;font-weight:300;letter-spacing:.04em;}
+.hright{padding:1.1rem 1.75rem;display:flex;align-items:center;gap:10px;margin-left:auto;flex-shrink:0;}
+.guided-toggle-wrap{display:flex;align-items:center;gap:8px;}
+.guided-toggle-label{font-size:0.65rem;font-weight:500;letter-spacing:.06em;text-transform:uppercase;color:rgba(255,255,255,.45);}
+.tog{position:relative;width:36px;height:20px;flex-shrink:0;}
+.tog input{opacity:0;width:0;height:0;}
+.tog-track{position:absolute;inset:0;background:rgba(255,255,255,.15);border-radius:10px;cursor:pointer;transition:background .2s;}
+.tog input:checked+.tog-track{background:var(--fc-orange);}
+.tog-thumb{position:absolute;top:3px;left:3px;width:14px;height:14px;background:#fff;border-radius:50%;transition:transform .2s;pointer-events:none;}
+.tog input:checked~.tog-thumb{transform:translateX(16px);}
+.confidence-pill{padding:4px 10px;border-radius:10px;font-size:0.6rem;font-weight:600;letter-spacing:.08em;text-transform:uppercase;border:1px solid;}
+.conf-low{background:rgba(176,48,48,.15);color:#f5a0a0;border-color:rgba(176,48,48,.3);}
+.conf-med{background:rgba(196,154,60,.15);color:#f0c878;border-color:rgba(196,154,60,.3);}
+.conf-high{background:rgba(26,107,69,.2);color:#6ee7a0;border-color:rgba(26,107,69,.35);}
+
+/* ══════════════════════════════════════════════════════
+   GUIDED STEPPER NAV
+══════════════════════════════════════════════════════ */
+.guided-nav{display:none;background:var(--navy-mid);padding:.6rem 2rem;border-bottom:1px solid rgba(255,255,255,.07);}
+.guided-nav.show{display:flex;align-items:center;gap:0;}
+.gstep{display:flex;align-items:center;gap:8px;cursor:pointer;padding:.4rem .9rem;border-radius:var(--r);transition:background .15s;}
+.gstep:hover{background:rgba(255,255,255,.05);}
+.gstep-num{width:22px;height:22px;border-radius:50%;background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.15);display:flex;align-items:center;justify-content:center;font-family:'DM Mono',monospace;font-size:.62rem;color:rgba(255,255,255,.4);flex-shrink:0;transition:all .15s;}
+.gstep.active .gstep-num{background:var(--fc-orange);border-color:var(--fc-orange);color:#fff;}
+.gstep.done .gstep-num{background:var(--green);border-color:var(--green);color:#fff;}
+.gstep-label{font-size:.63rem;font-weight:500;letter-spacing:.04em;color:rgba(255,255,255,.35);white-space:nowrap;transition:color .15s;}
+.gstep.active .gstep-label{color:#fff;}
+.gstep.done .gstep-label{color:rgba(255,255,255,.55);}
+.gstep-sep{width:24px;height:1px;background:rgba(255,255,255,.12);flex-shrink:0;}
+
+/* ══════════════════════════════════════════════════════
+   LAYOUT
+══════════════════════════════════════════════════════ */
+.app{display:grid;grid-template-columns:380px 1fr;min-height:calc(100vh - 88px);}
+
+/* ══════════════════════════════════════════════════════
+   FORM PANEL
+══════════════════════════════════════════════════════ */
+.form-panel{background:var(--white);border-right:1px solid var(--rule);overflow-y:auto;}
+.form-inner{padding:1.5rem 1.6rem 2.5rem;}
+
+.fsec{margin-bottom:1.6rem;}
+.fsec-title{font-size:.58rem;font-weight:700;letter-spacing:.16em;text-transform:uppercase;color:var(--ink-light);margin-bottom:.9rem;padding-bottom:6px;border-bottom:1px solid var(--rule);display:flex;align-items:center;gap:8px;}
+.fsec-title .step-badge{background:var(--fc-orange);color:#fff;font-size:.55rem;padding:2px 6px;border-radius:2px;font-weight:700;letter-spacing:.06em;}
+
+/* guided step panel visibility */
+.guided-step{display:block;}
+.guided-step.hidden{display:none;}
+
+/* live preview bar inside form */
+.live-bar{background:var(--navy);border-radius:var(--rmd);padding:.75rem 1rem;margin-bottom:1.2rem;display:grid;grid-template-columns:1fr 1fr;gap:8px;}
+.live-bar-item{}
+.live-bar-label{font-size:.55rem;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:rgba(255,255,255,.35);margin-bottom:2px;}
+.live-bar-val{font-family:'Playfair Display',serif;font-size:1.1rem;color:#fff;font-weight:600;}
+.live-bar-val.orange{color:var(--fc-orange);}
+
+/* confirmation banner (guided) */
+.confirm-banner{background:var(--red-light);border:1px solid rgba(176,48,48,.2);border-radius:var(--rmd);padding:.9rem 1rem;margin-bottom:1rem;}
+.confirm-banner-title{font-size:.73rem;font-weight:600;color:var(--red);margin-bottom:4px;}
+.confirm-banner-body{font-size:.7rem;color:var(--ink-mid);line-height:1.55;}
+.confirm-banner-val{font-family:'Playfair Display',serif;font-size:1.5rem;color:var(--red);font-weight:600;margin:.4rem 0;}
+
+.field{margin-bottom:1rem;}
+.field label{display:block;font-size:.71rem;font-weight:600;color:var(--ink-mid);margin-bottom:5px;letter-spacing:.02em;}
+.field-hint{font-size:.63rem;color:var(--ink-light);margin-top:3px;line-height:1.5;font-weight:300;}
+.field-row{display:grid;grid-template-columns:1fr 1fr;gap:8px;}
+.input-wrap{position:relative;display:flex;align-items:center;}
+.pfx{position:absolute;left:11px;font-size:.86rem;color:var(--ink-light);pointer-events:none;z-index:1;}
+.sfx{position:absolute;right:11px;font-size:.7rem;color:var(--ink-light);pointer-events:none;}
+.has-pfx input[type=number],.has-pfx input[type=text]{padding-left:24px;}
+.has-sfx input{padding-right:36px;}
+
+input[type=text],input[type=number],select,textarea{
+  width:100%;padding:9px 11px;font-family:'Inter',sans-serif;font-size:.85rem;
+  color:var(--ink);background:var(--cream);border:1px solid var(--rule);
+  border-radius:var(--r);outline:none;transition:border-color .15s,background .15s;
+  -moz-appearance:textfield;appearance:textfield;
+}
+input[type=number]::-webkit-outer-spin-button,
+input[type=number]::-webkit-inner-spin-button{-webkit-appearance:none;}
+input:focus,select:focus,textarea:focus{
+  border-color:var(--navy-light);background:#fff;
+  box-shadow:0 0 0 2px rgba(37,99,168,.08);
+}
+textarea{resize:vertical;min-height:60px;line-height:1.5;}
+select{-webkit-appearance:none;appearance:none;cursor:pointer;
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M0 0l5 6 5-6z' fill='%23999'/%3E%3C/svg%3E");
+  background-repeat:no-repeat;background-position:right 11px center;padding-right:28px;}
+.optional-tag{font-size:.58rem;font-weight:400;color:var(--ink-faint);margin-left:4px;font-style:italic;}
+
+/* pain chips */
+.pain-grid{display:grid;grid-template-columns:1fr 1fr;gap:5px;}
+.pchip{position:relative;}
+.pchip input[type=checkbox]{position:absolute;opacity:0;width:0;height:0;}
+.pchip label{display:block;padding:7px 9px;background:var(--cream);border:1px solid var(--rule);border-radius:var(--r);cursor:pointer;transition:all .15s;user-select:none;}
+.pchip input:checked+label{background:var(--navy);border-color:var(--navy);}
+.pchip-name{font-size:.7rem;font-weight:600;color:var(--ink);line-height:1.3;transition:color .15s;}
+.pchip-sub{font-size:.58rem;color:var(--ink-light);margin-top:2px;font-weight:300;transition:color .15s;}
+.pchip input:checked+label .pchip-name{color:#fff;}
+.pchip input:checked+label .pchip-sub{color:rgba(255,255,255,.5);}
+
+/* maturity indicator */
+.maturity-bar{display:flex;gap:4px;margin-top:6px;}
+.mb-seg{flex:1;height:4px;border-radius:2px;background:var(--rule);transition:background .2s;}
+.mb-seg.filled{background:var(--fc-orange);}
+
+/* buttons */
+.btn-primary{width:100%;padding:11px;background:var(--fc-orange);color:#fff;font-family:'Inter',sans-serif;font-size:.78rem;font-weight:600;letter-spacing:.07em;text-transform:uppercase;border:none;border-radius:var(--r);cursor:pointer;transition:background .15s,transform .1s;margin-top:.5rem;}
+.btn-primary:hover{background:#d4531e;}
+.btn-primary:active{transform:scale(.99);}
+.btn-secondary{padding:8px 16px;background:transparent;color:var(--navy-light);font-family:'Inter',sans-serif;font-size:.72rem;font-weight:500;letter-spacing:.05em;border:1px solid rgba(37,99,168,.3);border-radius:var(--r);cursor:pointer;transition:all .15s;}
+.btn-secondary:hover{background:rgba(37,99,168,.06);}
+.btn-row{display:flex;gap:8px;margin-top:.75rem;}
+
+/* guided next/back */
+.guided-footer{display:none;padding:.9rem 1.6rem 1.2rem;border-top:1px solid var(--rule);background:var(--white);}
+.guided-footer.show{display:flex;gap:8px;align-items:center;}
+.gback-btn{padding:9px 16px;background:transparent;color:var(--ink-light);font-family:'Inter',sans-serif;font-size:.73rem;font-weight:500;border:1px solid var(--rule);border-radius:var(--r);cursor:pointer;transition:all .15s;}
+.gback-btn:hover{border-color:var(--ink-light);color:var(--ink);}
+.gnext-btn{flex:1;padding:9px;background:var(--navy);color:#fff;font-family:'Inter',sans-serif;font-size:.73rem;font-weight:600;letter-spacing:.05em;text-transform:uppercase;border:none;border-radius:var(--r);cursor:pointer;transition:background .15s;}
+.gnext-btn:hover{background:var(--navy-mid);}
+
+/* ══════════════════════════════════════════════════════
+   OUTPUT PANEL
+══════════════════════════════════════════════════════ */
+.output-panel{background:var(--cream);overflow-y:auto;}
+.output-inner{padding:1.75rem 2rem 3rem;}
+
+/* empty state */
+.empty-state{display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:60vh;gap:12px;text-align:center;}
+.empty-icon{width:52px;height:52px;border:1px solid var(--rule);border-radius:50%;display:flex;align-items:center;justify-content:center;opacity:.3;}
+.empty-icon svg{width:22px;height:22px;}
+.empty-state p{font-size:.8rem;color:var(--ink-light);font-weight:300;font-style:italic;max-width:240px;line-height:1.6;}
+
+/* output mode tabs */
+.mode-tabs{display:flex;gap:0;margin-bottom:1.25rem;border:1px solid var(--rule);border-radius:var(--r);overflow:hidden;background:var(--white);width:fit-content;}
+.mode-tab{font-family:'Inter',sans-serif;font-size:.67rem;font-weight:600;letter-spacing:.07em;text-transform:uppercase;padding:7px 16px;cursor:pointer;border:none;background:transparent;color:var(--ink-light);transition:all .15s;white-space:nowrap;}
+.mode-tab+.mode-tab{border-left:1px solid var(--rule);}
+.mode-tab.active{background:var(--navy);color:#fff;}
+.mode-tab:hover:not(.active){background:var(--cream);color:var(--ink);}
+
+/* ── DOCUMENT SHELL ── */
+.doc{background:var(--white);border:1px solid var(--rule);border-radius:var(--rmd);overflow:hidden;max-width:840px;box-shadow:0 2px 24px rgba(0,0,0,.06);}
+
+/* doc header */
+.doc-hd{background:var(--navy);}
+.doc-hd-inner{display:flex;align-items:stretch;}
+.doc-hd-accent{background:var(--fc-orange);width:5px;flex-shrink:0;}
+.doc-hd-body{padding:1.5rem 1.85rem;flex:1;}
+.doc-eyebrow{font-size:.56rem;font-weight:600;letter-spacing:.18em;text-transform:uppercase;color:rgba(255,255,255,.35);margin-bottom:6px;}
+.doc-company{font-family:'Playfair Display',serif;font-size:1.85rem;color:#fff;font-weight:600;letter-spacing:-.02em;line-height:1.1;}
+.doc-tagline{font-size:.73rem;color:rgba(255,255,255,.4);margin-top:5px;font-weight:300;}
+.doc-meta-row{display:flex;gap:1.4rem;margin-top:1rem;padding-top:.9rem;border-top:1px solid rgba(255,255,255,.08);flex-wrap:wrap;}
+.doc-meta-item{display:flex;flex-direction:column;gap:2px;}
+.doc-meta-lbl{font-size:.54rem;font-weight:600;letter-spacing:.12em;text-transform:uppercase;color:rgba(255,255,255,.28);}
+.doc-meta-val{font-size:.75rem;color:rgba(255,255,255,.65);font-weight:400;}
+
+/* confidence badge in doc */
+.doc-conf{display:inline-flex;align-items:center;gap:5px;padding:3px 9px;border-radius:10px;font-size:.58rem;font-weight:600;letter-spacing:.08em;text-transform:uppercase;margin-left:auto;flex-shrink:0;align-self:flex-start;margin-top:1.5rem;}
+.doc-conf.low{background:rgba(176,48,48,.15);color:#f5a0a0;border:1px solid rgba(176,48,48,.25);}
+.doc-conf.med{background:rgba(196,154,60,.15);color:#f0c878;border:1px solid rgba(196,154,60,.25);}
+.doc-conf.high{background:rgba(26,107,69,.2);color:#6ee7a0;border:1px solid rgba(26,107,69,.3);}
+.doc-conf-dot{width:6px;height:6px;border-radius:50%;flex-shrink:0;}
+.low .doc-conf-dot{background:#f5a0a0;}
+.med .doc-conf-dot{background:#f0c878;}
+.high .doc-conf-dot{background:#6ee7a0;}
+
+/* doc body */
+.doc-body{padding:1.75rem 1.85rem 2rem;}
+
+/* sections */
+.dsec{margin-bottom:1.85rem;}
+.dsec:last-child{margin-bottom:0;}
+.dsec-hd{display:flex;align-items:center;gap:9px;margin-bottom:.9rem;}
+.dsec-num{font-family:'DM Mono',monospace;font-size:.62rem;color:var(--fc-orange);font-weight:500;min-width:18px;}
+.dsec-title{font-size:.58rem;font-weight:700;letter-spacing:.16em;text-transform:uppercase;color:var(--ink-light);}
+.dsec-line{flex:1;height:1px;background:var(--rule);}
+
+/* problem block */
+.prob-block{background:var(--fc-orange-light);border-left:3px solid var(--fc-orange);border-radius:0 var(--r) var(--r) 0;padding:.95rem 1.2rem;}
+.prob-block p{font-size:.84rem;color:var(--ink);line-height:1.75;}
+
+/* value drivers */
+.drivers-row{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:.7rem;}
+.driver-card{border-radius:var(--r);padding:.75rem .9rem;}
+.driver-card.primary{background:var(--navy);border:none;}
+.driver-card.secondary{background:var(--cream);border:1px solid var(--rule);}
+.driver-badge{font-size:.55rem;font-weight:700;letter-spacing:.1em;text-transform:uppercase;margin-bottom:4px;}
+.driver-card.primary .driver-badge{color:var(--fc-orange);}
+.driver-card.secondary .driver-badge{color:var(--ink-light);}
+.driver-name{font-size:.78rem;font-weight:600;}
+.driver-card.primary .driver-name{color:#fff;}
+.driver-card.secondary .driver-name{color:var(--ink);}
+.driver-desc{font-size:.66rem;margin-top:3px;line-height:1.45;font-weight:300;}
+.driver-card.primary .driver-desc{color:rgba(255,255,255,.5);}
+.driver-card.secondary .driver-desc{color:var(--ink-light);}
+
+/* ── COST OF INACTION ── */
+.coi-block{background:var(--red-light);border:1.5px solid rgba(176,48,48,.25);border-radius:var(--rmd);overflow:hidden;}
+.coi-header{background:var(--red);padding:.7rem 1.1rem;display:flex;align-items:center;justify-content:space-between;}
+.coi-header-title{font-size:.6rem;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:#fff;}
+.coi-total-label{font-size:.57rem;color:rgba(255,255,255,.6);text-transform:uppercase;letter-spacing:.1em;}
+.coi-total-val{font-family:'Playfair Display',serif;font-size:1.6rem;color:#fff;font-weight:600;line-height:1;}
+.coi-body{padding:.9rem 1.1rem;}
+.coi-row{display:flex;align-items:center;justify-content:space-between;padding:.45rem 0;border-bottom:1px solid rgba(176,48,48,.12);}
+.coi-row:last-child{border-bottom:none;}
+.coi-row-label{font-size:.72rem;color:var(--red);font-weight:500;}
+.coi-row-val{font-family:'Playfair Display',serif;font-size:.95rem;color:var(--red);font-weight:600;}
+.coi-footnote{font-size:.62rem;color:var(--red);opacity:.6;font-style:italic;margin-top:.5rem;line-height:1.5;}
+
+/* scenarios */
+.scenario-toggle{display:flex;gap:0;margin-bottom:.8rem;border:1px solid var(--rule);border-radius:var(--r);overflow:hidden;background:var(--white);width:fit-content;}
+.scen-tab{font-family:'Inter',sans-serif;font-size:.64rem;font-weight:600;letter-spacing:.07em;text-transform:uppercase;padding:6px 14px;cursor:pointer;border:none;background:transparent;color:var(--ink-light);transition:all .15s;}
+.scen-tab+.scen-tab{border-left:1px solid var(--rule);}
+.scen-tab.active{background:var(--navy);color:#fff;}
+
+.scen-cards{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:.9rem;}
+.scen-card{border-radius:var(--rmd);padding:.9rem 1rem;border:1px solid var(--rule);background:var(--white);transition:all .15s;cursor:pointer;}
+.scen-card.active{border-color:var(--navy);background:#f0f4f8;}
+.scen-card-label{font-size:.56rem;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--ink-light);margin-bottom:4px;}
+.scen-card.active .scen-card-label{color:var(--navy);}
+.scen-card-val{font-family:'Playfair Display',serif;font-size:1.35rem;font-weight:600;color:var(--ink);line-height:1;}
+.scen-card.active .scen-card-val{color:var(--navy);}
+.scen-card-sub{font-size:.6rem;color:var(--ink-light);margin-top:3px;line-height:1.3;}
+
+/* big metric strip */
+.metric-strip{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:.9rem;}
+.mcard{border-radius:var(--rmd);padding:.85rem .9rem;text-align:center;}
+.mcard.primary{background:var(--navy);}
+.mcard.green{background:var(--green-light);border:1px solid rgba(26,107,69,.18);}
+.mcard.gold{background:var(--gold-light);border:1px solid rgba(196,154,60,.22);}
+.mcard.plain{background:var(--white);border:1px solid var(--rule);}
+.mcard-lbl{font-size:.56rem;font-weight:600;letter-spacing:.11em;text-transform:uppercase;margin-bottom:4px;}
+.mcard.primary .mcard-lbl{color:rgba(255,255,255,.38);}
+.mcard.green .mcard-lbl{color:var(--green);}
+.mcard.gold .mcard-lbl{color:var(--gold);}
+.mcard.plain .mcard-lbl{color:var(--ink-light);}
+.mcard-val{font-family:'Playfair Display',serif;font-size:1.4rem;font-weight:600;line-height:1;letter-spacing:-.01em;}
+.mcard.primary .mcard-val{color:#fff;}
+.mcard.green .mcard-val{color:var(--green);}
+.mcard.gold .mcard-val{color:var(--gold);}
+.mcard.plain .mcard-val{color:var(--ink);}
+.mcard-sub{font-size:.6rem;margin-top:3px;font-weight:300;}
+.mcard.primary .mcard-sub{color:rgba(255,255,255,.38);}
+.mcard.green .mcard-sub{color:var(--green);}
+.mcard.gold .mcard-sub{color:#8a6b20;}
+.mcard.plain .mcard-sub{color:var(--ink-light);}
+
+/* value breakdown bars */
+.vbreak{display:flex;flex-direction:column;gap:7px;}
+.vb-row{display:flex;align-items:center;gap:10px;}
+.vb-label{font-size:.7rem;color:var(--ink-mid);font-weight:500;min-width:130px;}
+.vb-bar-wrap{flex:1;background:var(--cream);border-radius:2px;height:10px;overflow:hidden;}
+.vb-bar{height:100%;border-radius:2px;transition:width .4s ease;}
+.vb-bar.productivity{background:var(--navy);}
+.vb-bar.retention{background:var(--green);}
+.vb-bar.execution{background:var(--gold);}
+.vb-bar.leadership{background:var(--fc-orange);}
+.vb-val{font-family:'DM Mono',monospace;font-size:.68rem;color:var(--ink-mid);min-width:64px;text-align:right;}
+
+/* assumptions table */
+.assump-table{width:100%;border-collapse:collapse;}
+.assump-table th{font-size:.58rem;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--ink-light);text-align:left;padding:5px 8px;border-bottom:1px solid var(--rule);}
+.assump-table td{font-size:.73rem;color:var(--ink-mid);padding:6px 8px;border-bottom:1px solid rgba(228,224,216,.4);line-height:1.35;vertical-align:top;}
+.assump-table tr:last-child td{border-bottom:none;}
+.assump-table td:first-child{font-weight:500;color:var(--ink);width:40%;}
+.assump-table td.user{color:var(--navy-light);}
+.assump-table td.defaulted{color:var(--ink-light);font-style:italic;}
+.source-note{font-size:.6rem;color:var(--ink-light);margin-top:.5rem;font-style:italic;line-height:1.5;}
+
+/* next steps */
+.nsteps{display:flex;flex-direction:column;gap:7px;}
+.nstep{display:flex;gap:10px;padding:.8rem .95rem;border:1px solid var(--rule);border-radius:var(--r);background:var(--white);}
+.nstep-n{font-family:'DM Mono',monospace;font-size:.65rem;font-weight:500;color:var(--fc-orange);width:22px;height:22px;background:var(--fc-orange-light);border-radius:50%;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+.nstep-title{font-size:.76rem;font-weight:600;color:var(--ink);margin-bottom:2px;}
+.nstep-desc{font-size:.68rem;color:var(--ink-mid);line-height:1.5;font-weight:300;}
+
+/* failure risk block */
+.fail-block{background:var(--cream);border:1px solid var(--rule);border-radius:var(--r);padding:.8rem 1rem;}
+.fail-block-title{font-size:.65rem;font-weight:600;color:var(--ink-mid);margin-bottom:4px;}
+.fail-block-body{font-size:.75rem;color:var(--ink);line-height:1.6;font-style:italic;}
+
+/* CEO bullets */
+.ceo-bullets{display:flex;flex-direction:column;gap:10px;}
+.ceo-bullet{display:flex;gap:12px;align-items:flex-start;padding:1rem 1.1rem;border-radius:var(--rmd);border:1px solid var(--rule);background:var(--white);}
+.ceo-bullet-icon{font-size:1.1rem;flex-shrink:0;margin-top:1px;}
+.ceo-bullet-text{font-size:.85rem;color:var(--ink);line-height:1.6;}
+.ceo-bullet-text strong{font-weight:600;color:var(--navy);}
+
+/* CHRO narrative */
+.narrative-block{font-size:.84rem;color:var(--ink-mid);line-height:1.8;}
+.narrative-block p{margin-bottom:.9rem;}
+.narrative-block p:last-child{margin-bottom:0;}
+.narrative-highlight{font-weight:600;color:var(--ink);}
+
+/* doc footer action bar */
+.doc-actions{padding:.85rem 1.85rem;border-top:1px solid var(--rule);display:flex;align-items:center;justify-content:space-between;background:var(--cream);flex-wrap:wrap;gap:8px;}
+.doc-actions-left{font-size:.6rem;color:var(--ink-light);font-weight:300;}
+.doc-actions-right{display:flex;gap:7px;}
+.abtn{padding:8px 16px;font-family:'Inter',sans-serif;font-size:.68rem;font-weight:600;letter-spacing:.06em;text-transform:uppercase;border-radius:var(--r);cursor:pointer;transition:all .15s;white-space:nowrap;}
+.abtn-primary{background:var(--fc-orange);color:#fff;border:none;}
+.abtn-primary:hover{background:#d4531e;}
+.abtn-secondary{background:transparent;color:rgba(255,255,255,.65);border:1px solid rgba(255,255,255,.15);}
+.abtn-secondary:hover{background:rgba(255,255,255,.08);color:#fff;}
+.abtn-ghost{background:transparent;color:var(--ink-mid);border:1px solid var(--rule);}
+.abtn-ghost:hover{background:var(--cream);}
+.abtn-ghost.copied{color:var(--green);border-color:rgba(26,107,69,.3);}
+
+/* solution pillars grid */
+.pillars-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin-top:.7rem;}
+.pillar{background:var(--cream);border-radius:var(--r);padding:.6rem .7rem;text-align:center;}
+.pillar-icon{font-size:.95rem;margin-bottom:4px;}
+.pillar-name{font-size:.63rem;font-weight:600;color:var(--navy);line-height:1.3;}
+
+/* solution block */
+.solution-block{border:1px solid var(--rule);border-radius:var(--r);overflow:hidden;}
+.solution-top{background:var(--navy);padding:.8rem 1.1rem;display:flex;align-items:center;justify-content:space-between;}
+.solution-title{font-family:'Playfair Display',serif;font-size:1rem;color:#fff;font-weight:500;}
+.solution-badge{font-size:.56rem;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:var(--fc-orange);background:rgba(232,98,42,.12);border:1px solid rgba(232,98,42,.25);border-radius:2px;padding:3px 8px;}
+.solution-body{padding:.95rem 1.1rem;}
+.solution-body p{font-size:.81rem;color:var(--ink-mid);line-height:1.7;margin-bottom:.6rem;}
+.solution-body p:last-child{margin-bottom:0;}
+
+/* payback reframe */
+.payback-block{background:var(--navy);border-radius:var(--rmd);padding:1rem 1.2rem;display:flex;align-items:center;gap:1.5rem;}
+.pb-main{flex:1;}
+.pb-label{font-size:.56rem;font-weight:600;letter-spacing:.12em;text-transform:uppercase;color:rgba(255,255,255,.35);margin-bottom:4px;}
+.pb-val{font-family:'Playfair Display',serif;font-size:1.6rem;color:#fff;font-weight:600;line-height:1;}
+.pb-sub{font-size:.66rem;color:rgba(255,255,255,.4);margin-top:4px;}
+.pb-reframe{border-left:1px solid rgba(255,255,255,.1);padding-left:1.5rem;}
+.pb-reframe-text{font-size:.76rem;color:rgba(255,255,255,.7);line-height:1.6;max-width:240px;}
+.pb-reframe-text strong{color:var(--fc-orange);}
+
+/* print */
+@media print{
+  .form-panel,.guided-nav,.hright,.doc-actions-right,.mode-tabs{display:none!important;}
+  .app{display:block;}
+  .output-inner{padding:.5rem;}
+  .doc{box-shadow:none;border:none;max-width:100%;}
+  .header{display:none;}
+}
+</style>
+</head>
+<body>
+
+<!-- ══ HEADER ══════════════════════════════════════════ -->
+<div class="header">
+  <div class="header-inner">
+    <div class="hbrand">
+      <div class="hbrand-name">FranklinCovey</div>
+      <div class="hbrand-sub">All Access Pass</div>
+    </div>
+    <div class="htitle">
+      <h1>Business Case Generator</h1>
+      <p>Decision-grade analysis · CFO-ready output · Under 5 minutes</p>
+    </div>
+    <div class="hright">
+      <div class="guided-toggle-wrap">
+        <span class="guided-toggle-label">Guided Mode</span>
+        <label class="tog">
+          <input type="checkbox" id="guidedToggle" onchange="toggleGuidedMode()">
+          <div class="tog-track"></div>
+          <div class="tog-thumb"></div>
+        </label>
+      </div>
+      <div class="confidence-pill conf-low" id="confPill">Low Confidence</div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ GUIDED NAV ═══════════════════════════════════════ -->
+<div class="guided-nav" id="guidedNav">
+  <div class="gstep active" id="gnav1" onclick="gotoStep(1)">
+    <div class="gstep-num">1</div><div class="gstep-label">Current State</div>
+  </div>
+  <div class="gstep-sep"></div>
+  <div class="gstep" id="gnav2" onclick="gotoStep(2)">
+    <div class="gstep-num">2</div><div class="gstep-label">Pain Points</div>
+  </div>
+  <div class="gstep-sep"></div>
+  <div class="gstep" id="gnav3" onclick="gotoStep(3)">
+    <div class="gstep-num">3</div><div class="gstep-label">Cost of Inaction</div>
+  </div>
+  <div class="gstep-sep"></div>
+  <div class="gstep" id="gnav4" onclick="gotoStep(4)">
+    <div class="gstep-num">4</div><div class="gstep-label">Investment</div>
+  </div>
+  <div class="gstep-sep"></div>
+  <div class="gstep" id="gnav5" onclick="gotoStep(5)">
+    <div class="gstep-num">5</div><div class="gstep-label">Build Case</div>
+  </div>
+</div>
+
+<!-- ══ APP LAYOUT ══════════════════════════════════════ -->
+<div class="app">
+
+  <!-- ══ FORM PANEL ════════════════════════════════════ -->
+  <div class="form-panel" id="formPanel">
+    <div class="form-inner">
+
+      <!-- LIVE PREVIEW BAR -->
+      <div class="live-bar" id="liveBar" style="display:none;">
+        <div class="live-bar-item">
+          <div class="live-bar-label">Cost of Inaction (12mo)</div>
+          <div class="live-bar-val orange" id="liveCoI">—</div>
+        </div>
+        <div class="live-bar-item">
+          <div class="live-bar-label">Expected ROI</div>
+          <div class="live-bar-val" id="liveROI">—</div>
+        </div>
+      </div>
+
+      <!-- ── STEP 1: COMPANY ── -->
+      <div class="guided-step" id="step1">
+        <div class="fsec">
+          <div class="fsec-title"><span class="step-badge">01</span>Company &amp; Context</div>
+          <div class="field">
+            <label>Company Name</label>
+            <input type="text" id="companyName" placeholder="e.g. Acme Corporation" oninput="liveUpdate()"/>
+          </div>
+          <div class="field-row">
+            <div class="field">
+              <label>Industry</label>
+              <select id="industry" onchange="liveUpdate()">
+                <option value="professional_services">Professional Services</option>
+                <option value="technology">Technology</option>
+                <option value="financial_services">Financial Services</option>
+                <option value="healthcare">Healthcare</option>
+                <option value="manufacturing">Manufacturing</option>
+                <option value="retail">Retail / Consumer</option>
+                <option value="government">Government / Public Sector</option>
+                <option value="education">Education</option>
+                <option value="other">Other</option>
+              </select>
+            </div>
+            <div class="field">
+              <label>Strategic Context</label>
+              <select id="stratContext" onchange="liveUpdate()">
+                <option value="growth">Growth / Scaling</option>
+                <option value="cost">Cost Reduction</option>
+                <option value="pmi">Post-Merger Integration</option>
+                <option value="turnaround">Turnaround / Underperformance</option>
+                <option value="digital">Digital Transformation</option>
+                <option value="leadership_transition">Leadership Transition</option>
+              </select>
+            </div>
+          </div>
+          <div class="field">
+            <label>Org Maturity Level</label>
+            <select id="maturity" onchange="maturityChanged()">
+              <option value="adhoc">Ad hoc / Inconsistent</option>
+              <option value="defined" selected>Defined but Inconsistent</option>
+              <option value="consistent">Consistent but Not Scalable</option>
+              <option value="high">High Performing</option>
+            </select>
+            <div class="maturity-bar" id="maturityBar">
+              <div class="mb-seg filled" id="ms1"></div>
+              <div class="mb-seg" id="ms2"></div>
+              <div class="mb-seg" id="ms3"></div>
+              <div class="mb-seg" id="ms4"></div>
+            </div>
+            <div class="field-hint" id="maturityHint">Assumption multiplier: <strong id="maturityMult">1.2×</strong> — inconsistent execution amplifies every productivity drag.</div>
+          </div>
+          <div class="field">
+            <label>What happens if this initiative fails? <span class="optional-tag">optional</span></label>
+            <textarea id="failureRisk" placeholder="e.g. We miss our growth targets, continue losing top performers, and fall further behind competitors who are investing in culture..." rows="2"></textarea>
+          </div>
+        </div>
+      </div>
+
+      <!-- ── STEP 2: WORKFORCE ── -->
+      <div class="guided-step" id="step2">
+        <div class="fsec">
+          <div class="fsec-title"><span class="step-badge">02</span>Workforce Inputs</div>
+          <div class="field-row">
+            <div class="field">
+              <label>Employees in Scope</label>
+              <input type="number" id="employees" placeholder="250" min="10" oninput="liveUpdate()"/>
+            </div>
+            <div class="field">
+              <label>Avg Fully-Loaded Salary ($)</label>
+              <div class="input-wrap has-pfx">
+                <span class="pfx">$</span>
+                <input type="number" id="salary" placeholder="85000" min="30000" oninput="liveUpdate()"/>
+              </div>
+            </div>
+          </div>
+          <div class="field-row">
+            <div class="field">
+              <label>Revenue per Employee ($) <span class="optional-tag">optional</span></label>
+              <div class="input-wrap has-pfx">
+                <span class="pfx">$</span>
+                <input type="number" id="revPerEmp" placeholder="180000" oninput="liveUpdate()"/>
+              </div>
+              <div class="field-hint">Enables execution delay model</div>
+            </div>
+            <div class="field">
+              <label>% of Workforce Managers</label>
+              <div class="input-wrap has-sfx">
+                <input type="number" id="mgrPct" placeholder="15" min="1" max="50" oninput="liveUpdate()"/>
+                <span class="sfx">%</span>
+              </div>
+            </div>
+          </div>
+          <div class="field-row">
+            <div class="field">
+              <label>Voluntary Turnover Rate (%)</label>
+              <div class="input-wrap has-sfx">
+                <input type="number" id="turnover" placeholder="16" min="0" max="80" oninput="liveUpdate()"/>
+                <span class="sfx">%</span>
+              </div>
+              <div class="field-hint">US avg: 16% (SHRM 2025)</div>
+            </div>
+            <div class="field">
+              <label>Avg. Time to Productivity (mo)</label>
+              <input type="number" id="rampMonths" placeholder="4" min="1" max="24" oninput="liveUpdate()"/>
+              <div class="field-hint">Time to full output for a new hire</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ── STEP 3: PAIN POINTS ── -->
+      <div class="guided-step" id="step3">
+        <div class="fsec">
+          <div class="fsec-title"><span class="step-badge">03</span>Pain Points</div>
+          <div class="pain-grid">
+            <div class="pchip">
+              <input type="checkbox" id="pp_prioritization" value="prioritization" checked onchange="liveUpdate()"/>
+              <label for="pp_prioritization">
+                <div class="pchip-name">Poor Prioritization</div>
+                <div class="pchip-sub">Productivity · 8% drag</div>
+              </label>
+            </div>
+            <div class="pchip">
+              <input type="checkbox" id="pp_reactive" value="reactive" checked onchange="liveUpdate()"/>
+              <label for="pp_reactive">
+                <div class="pchip-name">Reactive Culture</div>
+                <div class="pchip-sub">Productivity · 10% drag</div>
+              </label>
+            </div>
+            <div class="pchip">
+              <input type="checkbox" id="pp_trust" value="trust" onchange="liveUpdate()"/>
+              <label for="pp_trust">
+                <div class="pchip-name">Low Trust</div>
+                <div class="pchip-sub">Execution · 12% drag</div>
+              </label>
+            </div>
+            <div class="pchip">
+              <input type="checkbox" id="pp_execution" value="execution" onchange="liveUpdate()"/>
+              <label for="pp_execution">
+                <div class="pchip-name">Weak Execution</div>
+                <div class="pchip-sub">Execution · 9% drag</div>
+              </label>
+            </div>
+            <div class="pchip">
+              <input type="checkbox" id="pp_retention" value="retention" onchange="liveUpdate()"/>
+              <label for="pp_retention">
+                <div class="pchip-name">High Turnover</div>
+                <div class="pchip-sub">Retention · 15% drag</div>
+              </label>
+            </div>
+            <div class="pchip">
+              <input type="checkbox" id="pp_leadership" value="leadership" onchange="liveUpdate()"/>
+              <label for="pp_leadership">
+                <div class="pchip-name">Manager Quality</div>
+                <div class="pchip-sub">Leadership · 11% drag</div>
+              </label>
+            </div>
+          </div>
+        </div>
+
+        <!-- Guided CoI confirmation banner (only shown in guided step 3) -->
+        <div class="confirm-banner" id="coiBanner" style="display:none;">
+          <div class="confirm-banner-title">Estimated cost of current challenges</div>
+          <div class="confirm-banner-body">Based on your inputs, here is the annual impact of doing nothing:</div>
+          <div class="confirm-banner-val" id="coiBannerVal">—</div>
+          <div class="confirm-banner-body">Does this resonate with your experience? Use this to anchor the conversation before showing the solution.</div>
+        </div>
+      </div>
+
+      <!-- ── STEP 4: INVESTMENT ── -->
+      <div class="guided-step" id="step4">
+        <div class="fsec">
+          <div class="fsec-title"><span class="step-badge">04</span>Investment Details</div>
+          <div class="field-row">
+            <div class="field">
+              <label>AAP Price per Seat / Yr ($)</label>
+              <div class="input-wrap has-pfx">
+                <span class="pfx">$</span>
+                <input type="number" id="pricePerSeat" placeholder="1500" min="500" oninput="liveUpdate()"/>
+              </div>
+            </div>
+            <div class="field">
+              <label>Contract Length</label>
+              <select id="contractYrs" onchange="liveUpdate()">
+                <option value="1">1 Year</option>
+                <option value="2">2 Years</option>
+                <option value="3" selected>3 Years</option>
+              </select>
+            </div>
+          </div>
+          <div class="field">
+            <label>Prepared For (Sponsor Name)</label>
+            <input type="text" id="sponsorName" placeholder="e.g. Sarah Chen, CHRO"/>
+          </div>
+          <div class="field">
+            <label>Prepared By</label>
+            <input type="text" id="preparedBy" placeholder="e.g. Alex Rivera, FranklinCovey"/>
+          </div>
+        </div>
+      </div>
+
+      <!-- ── BUILD BUTTON (always visible in free mode) ── -->
+      <div class="guided-step" id="step5">
+        <button class="btn-primary" onclick="generate()">Build Business Case →</button>
+        <div style="margin-top:.6rem;font-size:.63rem;color:var(--ink-light);text-align:center;line-height:1.5;">Numbers update live · Outputs in 3 formats · Print-ready PDF</div>
+      </div>
+
+    </div><!-- /form-inner -->
+
+    <!-- guided footer -->
+    <div class="guided-footer" id="guidedFooter">
+      <button class="gback-btn" id="gBackBtn" onclick="guidedBack()">← Back</button>
+      <button class="gnext-btn" id="gNextBtn" onclick="guidedNext()">Next Step →</button>
+    </div>
+  </div><!-- /form-panel -->
+
+  <!-- ══ OUTPUT PANEL ════════════════════════════════ -->
+  <div class="output-panel">
+    <div class="output-inner">
+
+      <div class="empty-state" id="emptyState">
+        <div class="empty-icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+        </div>
+        <p>Fill in the form and click "Build Business Case" to generate a CFO-ready, pressure-tested document.</p>
+      </div>
+
+      <div id="docWrap" style="display:none;">
+        <!-- output mode tabs -->
+        <div class="mode-tabs" id="modeTabs">
+          <button class="mode-tab active" onclick="setMode('cfo')">CFO One-Pager</button>
+          <button class="mode-tab" onclick="setMode('chro')">CHRO / L&D</button>
+          <button class="mode-tab" onclick="setMode('ceo')">CEO Summary</button>
+        </div>
+        <!-- document injected here -->
+        <div class="doc" id="docOutput"></div>
+      </div>
+
+    </div>
+  </div>
+
+</div><!-- /app -->
+
+<!-- ══════════════════════════════════════════════════════
+     JAVASCRIPT
+══════════════════════════════════════════════════════ -->
+<script>
+/* ── STATE ────────────────────────────────────────── */
+let currentMode = 'cfo';
+let currentScenario = 'moderate';
+let isGuided = false;
+let guidedStep = 1;
+let lastResult = null;
+
+/* ── PAIN DATA ────────────────────────────────────── */
+const PAIN = {
+  prioritization:{
+    name:'Poor Prioritization', category:'productivity', weight:.08,
+    desc:'Teams default to urgent, low-value work — leaving strategic initiatives perpetually deferred.',
+    stat:'Employees operating reactively lose ~28% of productive output weekly (Gallup 2025).',
+    fcSolution:'The 7 Habits and 5 Choices frameworks provide every employee a repeatable system to reclaim Quadrant II time.'
+  },
+  reactive:{
+    name:'Reactive Culture', category:'productivity', weight:.10,
+    desc:'The organization perpetually firefights, crowding out the capability-building that drives long-term performance.',
+    stat:'Proactive-culture companies outperform reactive peers by 40% on growth (McKinsey).',
+    fcSolution:'FranklinCovey\'s culture methodology shifts teams from reactive to intentional at scale.'
+  },
+  trust:{
+    name:'Low Organizational Trust', category:'execution', weight:.12,
+    desc:'Cross-functional friction, slow decisions, and high coordination costs create a "trust tax" on every initiative.',
+    stat:'Low-trust organizations pay 20–40% more in time and cost on every cross-functional transaction (Covey & Merrill).',
+    fcSolution:'The Speed of Trust curriculum gives leaders measurable behaviors to reduce coordination cost.'
+  },
+  execution:{
+    name:'Strategy-Execution Gap', category:'execution', weight:.09,
+    desc:'Strategic priorities don\'t cascade to front-line behavior. Goals exist at the leadership level but not in daily work.',
+    stat:'67% of strategic plans never fully execute due to poor goal alignment (HBR).',
+    fcSolution:'4 Disciplines of Execution (WIGs, lead measures, scoreboard, accountability rhythm) closes the gap operationally.'
+  },
+  retention:{
+    name:'High Voluntary Turnover', category:'retention', weight:.15,
+    desc:'Above-benchmark attrition is inflating recruiting and onboarding costs while depleting institutional knowledge.',
+    stat:'Replacement cost: 50–200% of annual salary (SHRM 2025). 42% of exits are preventable (Gallup 2025).',
+    fcSolution:'Leadership and engagement content directly addresses the #1 driver of exits: the manager relationship. A portion of turnover is driven by manager effectiveness, which is directly addressed through leadership development.'
+  },
+  leadership:{
+    name:'Manager Effectiveness', category:'leadership', weight:.11,
+    desc:'Frontline managers lack coaching, prioritization, and engagement skills to retain and develop their teams.',
+    stat:'70% of team engagement variance is attributable to the manager (Gallup 2025).',
+    fcSolution:'Leader In Me and manager effectiveness content gives every people leader a consistent operating system.'
+  }
+};
+
+/* Maturity multipliers: lower maturity = higher drag */
+const MATURITY_MULT = {adhoc:1.35, defined:1.2, consistent:1.0, high:0.7};
+const MATURITY_LABEL = {adhoc:'Ad hoc — 1.35× drag multiplier',defined:'Defined — 1.2× drag multiplier',consistent:'Consistent — 1.0×',high:'High performing — 0.7× (limited upside)'};
+const MATURITY_SEGS = {adhoc:1,defined:2,consistent:3,high:4};
+
+/* Scenario capture rates — adoption framing */
+const SCEN_RATE = {low:0.07, moderate:0.12, full:0.18};
+const SCEN_LABEL = {low:'Low Adoption',moderate:'Moderate Adoption',full:'Full Adoption'};
+const SCEN_DESC  = {low:'Limited behavior change',moderate:'Consistent manager adoption',full:'Organization-wide behavior shift'};
+
+/* Strategy context copy */
+const STRAT_COPY = {
+  growth:'As the organization scales aggressively, behavior consistency and execution discipline become existential — poor habits that are tolerable at 200 people become catastrophic at 1,000.',
+  cost:'In a cost-reduction environment, leadership effectiveness and engagement are the highest-leverage, lowest-capital investment available — the alternative is attrition and productivity erosion.',
+  pmi:'Post-merger integration success is 80% cultural. Without a shared operating system, two organizations remain two cultures — and the productivity promise of the deal goes unrealized.',
+  turnaround:'Turning around underperformance requires more than strategy — it requires changing daily habits and rebuilding trust, often across every level of the organization simultaneously.',
+  digital:'Digital transformation initiatives fail not because of technology, but because of people. Adoption and agility are leadership and culture problems first.',
+  leadership_transition:'Leadership transitions create a window of acute vulnerability. The incoming leader\'s ability to build trust and establish clear execution rhythms in the first 90 days determines trajectory for years.'
+};
+
+/* ── HELPERS ──────────────────────────────────────── */
+function g(id){return document.getElementById(id);}
+function v(id,def=0){return parseFloat(g(id).value)||def;}
+function vt(id,def=''){return g(id).value.trim()||def;}
+
+function ff(n){
+  if(n>=1e6) return '$'+(n/1e6).toFixed(1)+'M';
+  if(n>=1e3) return '$'+Math.round(n/1000)+'K';
+  return '$'+Math.round(n).toLocaleString();
+}
+function fmt(n){return '$'+Math.round(n).toLocaleString();}
+function pct(n){return Math.round(n)+'%';}
+function today(){return new Date().toLocaleDateString('en-US',{month:'long',day:'numeric',year:'numeric'});}
+
+function selectedPains(){
+  return ['prioritization','reactive','trust','execution','retention','leadership']
+    .filter(id=>g('pp_'+id)&&g('pp_'+id).checked);
+}
+
+/* ── MATURITY UI ──────────────────────────────────── */
+function maturityChanged(){
+  const m = g('maturity').value;
+  const segs = MATURITY_SEGS[m];
+  [1,2,3,4].forEach(i=>{
+    g('ms'+i).classList.toggle('filled',i<=segs);
+  });
+  g('maturityMult').textContent = MATURITY_MULT[m]+'×';
+  g('maturityHint').innerHTML = `Assumption multiplier: <strong>${MATURITY_MULT[m]}×</strong> — ${m==='high'?'minimal uplift expected; strong base already':'inconsistent execution amplifies every productivity drag'}.`;
+  liveUpdate();
+}
+
+/* ── CONFIDENCE SCORE ─────────────────────────────── */
+// Tracks which inputs are user-provided vs default/estimated
+function confidenceScore(){
+  let userProvided=0;
+  // These 6 fields are the meaningful inputs; defaults exist for all
+  if(v('employees',0)>0) userProvided++;
+  if(v('salary',0)>0) userProvided++;
+  if(v('pricePerSeat',0)>0) userProvided++;
+  if(v('turnover',0)>0) userProvided++;
+  if(v('revPerEmp',0)>0) userProvided++;
+  if(v('mgrPct',0)>0) userProvided++;
+  // >50% default/estimated = assumption-based
+  if(userProvided<=2) return 'low';
+  // some real data, some estimates = mixed
+  if(userProvided<=4) return 'med';
+  // most inputs user-provided = data-backed
+  return 'high';
+}
+
+function updateConfPill(){
+  const c = confidenceScore();
+  const pill = g('confPill');
+  pill.className = 'confidence-pill conf-'+c;
+  pill.textContent = {low:'Assumption-Based',med:'Mixed Inputs',high:'Data-Backed'}[c];
+}
+
+/* ── CORE MODEL ───────────────────────────────────── */
+function buildModel(){
+  const employees   = v('employees',250);
+  const salary      = v('salary',85000);
+  const revPerEmpRaw   = v('revPerEmp',0);
+  const revPerEmpEstimated = revPerEmpRaw === 0;
+  const revPerEmp = revPerEmpRaw > 0 ? revPerEmpRaw : salary * 2.5;
+  const mgrPct      = v('mgrPct',15)/100;
+  const turnoverPct = v('turnover',16)/100;
+  const rampMonths  = v('rampMonths',4);
+  const pricePerSeat= v('pricePerSeat',1500);
+  const contractYrs = v('contractYrs',3);
+  const matMult     = MATURITY_MULT[g('maturity').value||'defined'];
+
+  const totalPayroll  = employees * salary;
+  const managers      = Math.round(employees * mgrPct);
+  const totalInvest   = employees * pricePerSeat;
+  const totalMultiYr  = totalInvest * contractYrs;
+
+  const pains = selectedPains();
+  if(!pains.length) return null;
+
+  // Weighted impact by category
+  const cats = {productivity:0,execution:0,retention:0,leadership:0};
+  pains.forEach(id=>{
+    const p = PAIN[id];
+    cats[p.category] = Math.max(cats[p.category], p.weight);
+  });
+
+  // Value by category (pre-capture)
+  const productivityVal = totalPayroll * cats.productivity * matMult;
+  // Represents conservative estimate of performance improvement from better execution alignment
+  const executionImprovementRate = 0.08;
+  const executionVal    = employees * revPerEmp * cats.execution * executionImprovementRate * matMult;
+  const retentionVal    = (() => {
+    if(!cats.retention) return 0;
+    const exits = employees * turnoverPct;
+    const replaceCost = salary * 0.75;
+    const avoidable = exits * 0.42 * 0.10; // 42% preventable, 10% capture
+    return avoidable * replaceCost;
+  })();
+  // Leadership impact modeled as a multiplier of team productivity improvement
+  const leadershipVal   = productivityVal * 0.25 * cats.leadership;
+
+  const grossValPreOverlap = productivityVal + executionVal + retentionVal + leadershipVal;
+  const overlapAdj = grossValPreOverlap * 0.20;
+  const grossVal = grossValPreOverlap - overlapAdj;
+
+  // Cost of inaction (pre-capture, represents the full drag)
+  const coiProductivity = productivityVal;
+  const coiTurnover     = (() => {
+    const exits = employees * turnoverPct;
+    const rampCost = (salary / 12) * rampMonths * exits;
+    const replaceCost = exits * salary * 0.75;
+    return rampCost + replaceCost;
+  })();
+  const coiExecution    = employees * revPerEmp * cats.execution * 0.08;
+  const coiTotal        = coiProductivity + coiTurnover + coiExecution;
+
+  // Three scenarios
+  const scenarios = {};
+  ['low','moderate','full'].forEach(s=>{
+    const rate = SCEN_RATE[s];
+    const annualVal = grossVal * rate;
+    const multiVal  = annualVal * contractYrs;
+    const net       = multiVal - totalMultiYr;
+    const roi       = Math.round((net / totalMultiYr)*100);
+    const payback   = totalInvest / (annualVal/12);
+    const perSeat   = Math.round(annualVal / employees);
+    scenarios[s] = {annualVal, multiVal, net, roi, payback, perSeat};
+  });
+
+  // Primary/secondary value drivers
+  const sortedCats = Object.entries(cats).filter(([,v])=>v>0).sort((a,b)=>b[1]-a[1]);
+  const primaryCat   = sortedCats[0]?.[0]||'productivity';
+  const secondaryCat = sortedCats[1]?.[0]||null;
+
+  // Pain-to-category desc
+  const catDesc = {
+    productivity:'Productivity Loss — employees spending time on low-value, reactive work instead of strategic output.',
+    execution:'Execution Delay — strategy not translating into daily behavior, costing speed and revenue.',
+    retention:'Avoidable Turnover — recruiting, onboarding, and ramp costs from preventable exits.',
+    leadership:'Manager Effectiveness — team output suppressed by undertrained frontline leaders.'
+  };
+
+  return {
+    // inputs
+    employees, salary, revPerEmp, revPerEmpEstimated, mgrPct, turnoverPct, rampMonths,
+    pricePerSeat, contractYrs, managers, matMult,
+    totalPayroll, totalInvest, totalMultiYr,
+    // model
+    cats, grossVal, grossValPreOverlap, overlapAdj,
+    productivityVal, executionVal, retentionVal, leadershipVal,
+    // coi
+    coiTotal, coiProductivity, coiTurnover, coiExecution,
+    // scenarios
+    scenarios,
+    // drivers
+    primaryCat, secondaryCat, catDesc,
+    // meta
+    pains,
+    confidence: confidenceScore()
+  };
+}
+
+/* ── LIVE UPDATE ──────────────────────────────────── */
+function liveUpdate(){
+  updateConfPill();
+  const m = buildModel();
+  if(!m) return;
+
+  // live bar
+  const lb = g('liveBar');
+  lb.style.display='grid';
+  g('liveCoI').textContent = ff(m.coiTotal);
+  const exp = m.scenarios.moderate;
+  g('liveROI').textContent = pct(exp.roi);
+
+  // guided CoI banner
+  if(isGuided && guidedStep===3){
+    const b = g('coiBanner');
+    b.style.display='block';
+    g('coiBannerVal').textContent = ff(m.coiTotal)+' / year';
+  }
+
+  // auto-regenerate if doc already shown
+  if(lastResult && g('docWrap').style.display!=='none') generate(true);
+}
+
+/* ── GUIDED MODE ──────────────────────────────────── */
+function toggleGuidedMode(){
+  isGuided = g('guidedToggle').checked;
+  g('guidedNav').classList.toggle('show', isGuided);
+  g('guidedFooter').classList.toggle('show', isGuided);
+
+  if(isGuided){
+    guidedStep=1;
+    renderGuidedStep(1);
+  } else {
+    // show all steps
+    [1,2,3,4,5].forEach(i=>g('step'+i).classList.remove('hidden'));
+    g('coiBanner').style.display='none';
+  }
+}
+
+function renderGuidedStep(n){
+  [1,2,3,4,5].forEach(i=>{
+    g('step'+i).classList.toggle('hidden', i!==n);
+  });
+  // nav states
+  [1,2,3,4,5].forEach(i=>{
+    const nav = g('gnav'+i);
+    nav.classList.toggle('active', i===n);
+    nav.classList.toggle('done', i<n);
+  });
+  g('gBackBtn').style.visibility = n===1?'hidden':'visible';
+  g('gNextBtn').textContent = n===5?'Build Business Case →':'Next Step →';
+
+  if(n===3) liveUpdate(); // trigger CoI banner
+}
+
+function gotoStep(n){ guidedStep=n; renderGuidedStep(n); }
+function guidedNext(){
+  if(guidedStep===5){ generate(); return; }
+  guidedStep = Math.min(5, guidedStep+1);
+  renderGuidedStep(guidedStep);
+}
+function guidedBack(){
+  guidedStep = Math.max(1, guidedStep-1);
+  renderGuidedStep(guidedStep);
+}
+
+/* ── SET MODE / SCENARIO ─────────────────────────── */
+function setMode(m){
+  currentMode = m;
+  document.querySelectorAll('.mode-tab').forEach((t,i)=>{
+    t.classList.toggle('active', ['cfo','chro','ceo'][i]===m);
+  });
+  if(lastResult) renderDoc(lastResult);
+}
+
+function setScenario(s){
+  currentScenario=s;
+  if(lastResult) renderDoc(lastResult);
+}
+
+/* ── GENERATE ─────────────────────────────────────── */
+function generate(silent=false){
+  const m = buildModel();
+  if(!m){
+    if(!silent) alert('Please select at least one pain point.');
+    return;
+  }
+  lastResult = m;
+  g('emptyState').style.display='none';
+  g('docWrap').style.display='block';
+  renderDoc(m);
+  if(!silent) g('docWrap').scrollIntoView({behavior:'smooth',block:'start'});
+}
+
+/* ── RENDER DOCUMENT ──────────────────────────────── */
+function renderDoc(m){
+  const company  = vt('companyName','Your Organization');
+  const sponsor  = vt('sponsorName','—');
+  const prepBy   = vt('preparedBy','FranklinCovey Account Executive');
+  const strat    = g('stratContext').value;
+  const failRisk = vt('failureRisk','');
+  const s        = m.scenarios[currentScenario];
+  const conf     = m.confidence;
+  const confLbl  = {low:'Assumption-Based',med:'Mixed Inputs',high:'Data-Backed'}[conf];
+  const pains    = m.pains.map(id=>PAIN[id]);
+
+  const confBadge = `<div class="doc-conf ${conf}"><div class="doc-conf-dot"></div>${confLbl} Confidence</div>`;
+
+  let html='';
+
+  /* ── CFO ONE-PAGER ── */
+  if(currentMode==='cfo'){
+    html = `
+    <div class="doc-hd">
+      <div class="doc-hd-inner">
+        <div class="doc-hd-accent"></div>
+        <div class="doc-hd-body">
+          <div style="display:flex;align-items:flex-start;justify-content:space-between;">
+            <div>
+              <div class="doc-eyebrow">Confidential · CFO Business Case</div>
+              <div class="doc-company">${company}</div>
+              <div class="doc-tagline">FranklinCovey All Access Pass — Strategic Investment Analysis</div>
+            </div>
+            ${confBadge}
+          </div>
+          <div class="doc-meta-row">
+            <div class="doc-meta-item"><span class="doc-meta-lbl">Prepared for</span><span class="doc-meta-val">${sponsor}</span></div>
+            <div class="doc-meta-item"><span class="doc-meta-lbl">Prepared by</span><span class="doc-meta-val">${prepBy}</span></div>
+            <div class="doc-meta-item"><span class="doc-meta-lbl">Date</span><span class="doc-meta-val">${today()}</span></div>
+            <div class="doc-meta-item"><span class="doc-meta-lbl">Employees in scope</span><span class="doc-meta-val">${m.employees.toLocaleString()}</span></div>
+            <div class="doc-meta-item"><span class="doc-meta-lbl">Annual investment</span><span class="doc-meta-val">${ff(m.totalInvest)}</span></div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="doc-body">
+
+      <!-- SECTION 1: PROBLEM IN DOLLARS -->
+      <div class="dsec">
+        <div class="dsec-hd"><span class="dsec-num">01</span><span class="dsec-title">The Problem — Quantified</span><div class="dsec-line"></div></div>
+        <div class="prob-block">
+          <p>${STRAT_COPY[strat]} ${company}'s ${m.employees.toLocaleString()} employees are currently affected by <strong>${pains.length} compounding challenge${pains.length>1?'s':''}</strong>: ${pains.map(p=>'<strong>'+p.name+'</strong>').join(', ')}. The primary value driver is <strong>${m.catDesc[m.primaryCat]}</strong>${m.secondaryCat?' The secondary driver is '+m.catDesc[m.secondaryCat]:''}</p>
+        </div>
+        <div class="drivers-row">
+          <div class="driver-card primary">
+            <div class="driver-badge">Primary Value Driver</div>
+            <div class="driver-name">${m.primaryCat.charAt(0).toUpperCase()+m.primaryCat.slice(1)}</div>
+            <div class="driver-desc">${m.catDesc[m.primaryCat]}</div>
+          </div>
+          ${m.secondaryCat?`<div class="driver-card secondary">
+            <div class="driver-badge">Secondary Value Driver</div>
+            <div class="driver-name">${m.secondaryCat.charAt(0).toUpperCase()+m.secondaryCat.slice(1)}</div>
+            <div class="driver-desc">${m.catDesc[m.secondaryCat]}</div>
+          </div>`:''}
+        </div>
+      </div>
+
+      <!-- SECTION 2: COST OF INACTION -->
+      <div class="dsec">
+        <div class="dsec-hd"><span class="dsec-num">02</span><span class="dsec-title">Cost of Inaction — If Nothing Changes</span><div class="dsec-line"></div></div>
+        <div class="coi-block">
+          <div class="coi-header">
+            <span class="coi-header-title">⚠ Annual cost of the status quo</span>
+            <div>
+              <div class="coi-total-label">12-month exposure</div>
+              <div class="coi-total-val">${ff(m.coiTotal)}</div>
+              <div style="font-size:.58rem;color:rgba(255,255,255,.4);margin-top:3px;">Approximately ${Math.round(m.coiTotal/m.totalPayroll*100)}% of total payroll</div>
+              <div style="font-size:.57rem;color:rgba(255,255,255,.3);margin-top:2px;font-style:italic;max-width:220px;line-height:1.45;">These estimates are directional and intended to frame discussion, not serve as precise financial forecasts.</div>
+            </div>
+          </div>
+          <div class="coi-body">
+            ${m.cats.productivity>0?`<div class="coi-row"><span class="coi-row-label">Lost productivity (payroll drag)</span><span class="coi-row-val">${ff(m.coiProductivity)}</span></div>`:''}
+            <div class="coi-row"><span class="coi-row-label">Avoidable turnover cost</span><span class="coi-row-val">${ff(m.coiTurnover)}</span></div>
+            ${m.cats.execution>0?`<div class="coi-row"><span class="coi-row-label">Delayed execution / revenue drag</span><span class="coi-row-val">${ff(m.coiExecution)}</span></div>`:''}
+            <div class="coi-footnote">This represents ongoing annual loss. The proposed investment addresses only a fraction of this exposure.</div>
+            <div class="coi-footnote" style="margin-top:.3rem;">Leadership effectiveness is embedded within productivity and turnover impacts.</div>
+            <div class="coi-footnote" style="margin-top:.4rem;border-top:1px solid rgba(176,48,48,.1);padding-top:.4rem;">How this was calculated:
+              <br>· Productivity loss = payroll × productivity drag × maturity factor
+              <br>· Turnover cost = exits × replacement cost + lost productivity during ramp
+              <br>· Execution drag = revenue per employee × execution gap × delay factor
+            </div>
+          </div>
+        </div>
+        ${failRisk?`<div class="fail-block" style="margin-top:.75rem;"><div class="fail-block-title">Stated risk if this initiative fails:</div><div class="fail-block-body">"${failRisk}"</div></div>`:''}
+      </div>
+
+      <!-- SECTION 3: FINANCIAL MODEL -->
+      <div class="dsec">
+        <div class="dsec-hd"><span class="dsec-num">03</span><span class="dsec-title">Financial Impact — Three Scenarios</span><div class="dsec-line"></div></div>
+        <div class="scen-cards">
+          ${['low','moderate','full'].map(sc=>{
+            const sc_d = m.scenarios[sc];
+            return `<div class="scen-card ${currentScenario===sc?'active':''}" onclick="setScenario('${sc}')">
+              <div class="scen-card-label">${SCEN_LABEL[sc]}</div>
+              <div class="scen-card-val">${ff(sc_d.annualVal)}</div>
+              <div class="scen-card-sub">${SCEN_DESC[sc]} · ${pct(sc_d.roi)} ROI</div>
+            </div>`;
+          }).join('')}
+        </div>
+        <div class="metric-strip">
+          <div class="mcard primary">
+            <div class="mcard-lbl">${m.contractYrs}-Yr Value (${SCEN_LABEL[currentScenario]})</div>
+            <div class="mcard-val">${ff(s.multiVal)}</div>
+            <div class="mcard-sub">Low Adoption: ${ff(m.scenarios.low.multiVal)}</div>
+          </div>
+          <div class="mcard green">
+            <div class="mcard-lbl">Return on Investment</div>
+            <div class="mcard-val">${pct(s.roi)}</div>
+            <div class="mcard-sub">Net ${ff(s.net)} over ${m.contractYrs} yrs</div>
+          </div>
+          <div class="mcard gold">
+            <div class="mcard-lbl">Value per Seat / Yr</div>
+            <div class="mcard-val">${ff(s.perSeat)}</div>
+            <div class="mcard-sub">vs ${fmt(m.pricePerSeat)} investment</div>
+          </div>
+          <div class="mcard plain">
+            <div class="mcard-lbl">Payback Period</div>
+            <div class="mcard-val">${s.payback.toFixed(1)} mo</div>
+            <div class="mcard-sub">Recovered in Year 1</div>
+          </div>
+        </div>
+        <div class="payback-block">
+          <div class="pb-main">
+            <div class="pb-label">Payback Reframe</div>
+            <div class="pb-val">${s.payback.toFixed(1)} months</div>
+            <div class="pb-sub">to recover full Year 1 investment</div>
+          </div>
+          <div class="pb-reframe">
+            <div class="pb-reframe-text">The ${ff(m.totalInvest)} annual investment is recovered within <strong>${s.payback.toFixed(1)} months of Year 1</strong>. The remaining ${(12-s.payback).toFixed(1)} months of Year 1 — and all of Years 2–${m.contractYrs} — are pure return. At Full Adoption, payback is <strong>${m.scenarios.full.payback.toFixed(1)} months</strong>.</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- SECTION 4: VALUE BREAKDOWN -->
+      <div class="dsec">
+        <div class="dsec-hd"><span class="dsec-num">04</span><span class="dsec-title">Value Breakdown by Category</span><div class="dsec-line"></div></div>
+        ${buildValueBreakdown(m, s)}
+      </div>
+
+      <!-- SECTION 5: SOLUTION -->
+      <div class="dsec">
+        <div class="dsec-hd"><span class="dsec-num">05</span><span class="dsec-title">Proposed Solution</span><div class="dsec-line"></div></div>
+        <div class="solution-block">
+          <div class="solution-top">
+            <span class="solution-title">FranklinCovey All Access Pass</span>
+            <span class="solution-badge">Unlimited Access · ${m.employees.toLocaleString()} Seats</span>
+          </div>
+          <div class="solution-body">
+            <p>The All Access Pass provides ${company} with unlimited access to FranklinCovey's entire content library — on-demand digital courses, live-online workshops, in-person sessions, and implementation tools — for every licensed employee. Unlike point solutions, the AAP is a holistic behavior-change platform that addresses the root causes identified above.</p>
+            <p>${pains.map(p=>`<strong>${p.name}:</strong> ${p.fcSolution}`).join(' ')}</p>
+          </div>
+          <div class="pillars-grid" style="padding:0 1.1rem .9rem;">
+            <div class="pillar"><div class="pillar-icon">🎯</div><div class="pillar-name">7 Habits of Highly Effective People</div></div>
+            <div class="pillar"><div class="pillar-icon">⚡</div><div class="pillar-name">4 Disciplines of Execution</div></div>
+            <div class="pillar"><div class="pillar-icon">🤝</div><div class="pillar-name">Speed of Trust</div></div>
+            <div class="pillar"><div class="pillar-icon">🧭</div><div class="pillar-name">5 Choices to Extraordinary Productivity</div></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- SECTION 6: ASSUMPTIONS -->
+      <div class="dsec">
+        <div class="dsec-hd"><span class="dsec-num">06</span><span class="dsec-title">Assumptions &amp; Model Inputs</span><div class="dsec-line"></div></div>
+        ${buildAssumptionsTable(m)}
+      </div>
+
+      <!-- SECTION 7: NEXT STEPS -->
+      <div class="dsec">
+        <div class="dsec-hd"><span class="dsec-num">07</span><span class="dsec-title">Recommended Next Steps</span><div class="dsec-line"></div></div>
+        <div class="nsteps">
+          <div class="nstep"><div class="nstep-n">1</div><div><div class="nstep-title">Executive Alignment Meeting</div><div class="nstep-desc">Schedule a 45-minute session with the executive sponsor to validate assumptions, confirm strategic fit, and gain verbal commitment to move forward.</div></div></div>
+          <div class="nstep"><div class="nstep-n">2</div><div><div class="nstep-title">Stakeholder Discovery &amp; Success Metrics</div><div class="nstep-desc">Structured discovery with HR, L&D, and frontline leaders to establish baseline metrics and define what Year 1 success looks like.</div></div></div>
+          <div class="nstep"><div class="nstep-n">3</div><div><div class="nstep-title">90-Day Pilot Cohort</div><div class="nstep-desc">Scope a 30–50 person pilot to demonstrate measurable behavior change before full deployment — de-risks the investment decision.</div></div></div>
+          <div class="nstep"><div class="nstep-n">4</div><div><div class="nstep-title">Procurement &amp; Legal Review</div><div class="nstep-desc">FranklinCovey will provide a pre-negotiated MSA and procurement FAQ to accelerate legal review. Typical timeline: 2–3 weeks.</div></div></div>
+        </div>
+      </div>
+
+    </div>
+    ${buildDocFooter(company, m, s)}`;
+  }
+
+  /* ── CHRO / L&D VERSION ── */
+  else if(currentMode==='chro'){
+    html = `
+    <div class="doc-hd">
+      <div class="doc-hd-inner">
+        <div class="doc-hd-accent"></div>
+        <div class="doc-hd-body">
+          <div style="display:flex;align-items:flex-start;justify-content:space-between;">
+            <div>
+              <div class="doc-eyebrow">CHRO / L&D Leadership Brief</div>
+              <div class="doc-company">${company}</div>
+              <div class="doc-tagline">FranklinCovey All Access Pass — People &amp; Culture Investment Case</div>
+            </div>
+            ${confBadge}
+          </div>
+          <div class="doc-meta-row">
+            <div class="doc-meta-item"><span class="doc-meta-lbl">Prepared for</span><span class="doc-meta-val">${sponsor}</span></div>
+            <div class="doc-meta-item"><span class="doc-meta-lbl">Prepared by</span><span class="doc-meta-val">${prepBy}</span></div>
+            <div class="doc-meta-item"><span class="doc-meta-lbl">Date</span><span class="doc-meta-val">${today()}</span></div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="doc-body">
+
+      <div class="dsec">
+        <div class="dsec-hd"><span class="dsec-num">01</span><span class="dsec-title">The Strategic Context</span><div class="dsec-line"></div></div>
+        <div class="narrative-block">
+          <p>${STRAT_COPY[strat]}</p>
+          <p>For ${company}, this creates an urgent mandate. With ${m.employees.toLocaleString()} employees and a ${pct(m.turnoverPct*100)} voluntary turnover rate, the people and culture agenda is not a "nice to have" — it is a direct input to financial performance. The identified challenges — <span class="narrative-highlight">${pains.map(p=>p.name).join(', ')}</span> — represent ${ff(m.coiTotal)} in annual organizational drag that the CHRO is uniquely positioned to address.</p>
+          <p>The business case for investing in FranklinCovey's All Access Pass rests on three pillars: <strong>behavior change at scale</strong>, <strong>measurable financial return</strong>, and <strong>strategic risk mitigation</strong>.</p>
+        </div>
+      </div>
+
+      <div class="dsec">
+        <div class="dsec-hd"><span class="dsec-num">02</span><span class="dsec-title">What the Data Says</span><div class="dsec-line"></div></div>
+        <div class="narrative-block">
+          ${pains.map(p=>`<p><strong>${p.name}:</strong> ${p.desc} <em>${p.stat}</em> FranklinCovey's response: ${p.fcSolution}</p>`).join('')}
+        </div>
+      </div>
+
+      <div class="dsec">
+        <div class="dsec-hd"><span class="dsec-num">03</span><span class="dsec-title">Financial Summary for Leadership</span><div class="dsec-line"></div></div>
+        <div class="coi-block" style="margin-bottom:.9rem;">
+          <div class="coi-header">
+            <span class="coi-header-title">Cost of Inaction (Annual)</span>
+            <div><div class="coi-total-label">12-month exposure</div><div class="coi-total-val">${ff(m.coiTotal)}</div><div style="font-size:.58rem;color:rgba(255,255,255,.4);margin-top:3px;">Approximately ${Math.round(m.coiTotal/m.totalPayroll*100)}% of total payroll</div><div style="font-size:.57rem;color:rgba(255,255,255,.3);margin-top:2px;font-style:italic;max-width:220px;line-height:1.45;">These estimates are directional and intended to frame discussion, not serve as precise financial forecasts.</div></div>
+          </div>
+          <div class="coi-body">
+            ${m.cats.productivity>0?`<div class="coi-row"><span class="coi-row-label">Productivity drag</span><span class="coi-row-val">${ff(m.coiProductivity)}</span></div>`:''}
+            <div class="coi-row"><span class="coi-row-label">Avoidable turnover cost</span><span class="coi-row-val">${ff(m.coiTurnover)}</span></div>
+            ${m.cats.execution>0?`<div class="coi-row"><span class="coi-row-label">Execution delay cost</span><span class="coi-row-val">${ff(m.coiExecution)}</span></div>`:''}
+            <div class="coi-footnote">This represents ongoing annual loss. The proposed investment addresses only a fraction of this exposure.</div>
+            <div class="coi-footnote" style="margin-top:.3rem;">Leadership effectiveness is embedded within productivity and turnover impacts.</div>
+          </div>
+        </div>
+        <div class="metric-strip">
+          <div class="mcard primary">
+            <div class="mcard-lbl">${m.contractYrs}-Year Moderate Adoption Return</div>
+            <div class="mcard-val">${ff(m.scenarios.moderate.multiVal)}</div>
+            <div class="mcard-sub">${pct(m.scenarios.moderate.roi)} ROI</div>
+          </div>
+          <div class="mcard green">
+            <div class="mcard-lbl">Annual Investment</div>
+            <div class="mcard-val">${ff(m.totalInvest)}</div>
+            <div class="mcard-sub">${fmt(m.pricePerSeat)} / seat / yr</div>
+          </div>
+          <div class="mcard gold">
+            <div class="mcard-lbl">Payback Period</div>
+            <div class="mcard-val">${m.scenarios.moderate.payback.toFixed(1)} mo</div>
+            <div class="mcard-sub">Recovered in Year 1</div>
+          </div>
+          <div class="mcard plain">
+            <div class="mcard-lbl">Value per Seat</div>
+            <div class="mcard-val">${ff(m.scenarios.moderate.perSeat)}</div>
+            <div class="mcard-sub">annual return per license</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="dsec">
+        <div class="dsec-hd"><span class="dsec-num">04</span><span class="dsec-title">Why All Access Pass, Not a Point Solution</span><div class="dsec-line"></div></div>
+        <div class="narrative-block">
+          <p>Point solutions — a single leadership workshop, a one-off training event — address symptoms. The challenges ${company} faces are systemic: they exist because people at every level lack a common language, a shared operating system, and consistent daily habits. You cannot fix a culture problem with a training event.</p>
+          <p>The All Access Pass provides unlimited access across the full FranklinCovey library, enabling ${company} to deploy a consistent behavior-change platform across every cohort, level, and geography — without the cost of individual engagements. Key content: <strong>7 Habits</strong>, <strong>4 Disciplines of Execution</strong>, <strong>Speed of Trust</strong>, <strong>5 Choices</strong>, <strong>Leader in Me</strong>, and 30+ additional solutions.</p>
+          <p>The model is designed to create compounding returns: as more employees adopt shared frameworks, the collaboration multiplier grows, trust increases, and execution velocity compounds — the ROI improves year over year.</p>
+        </div>
+      </div>
+
+      <div class="dsec">
+        <div class="dsec-hd"><span class="dsec-num">05</span><span class="dsec-title">Assumptions &amp; Confidence</span><div class="dsec-line"></div></div>
+        ${buildAssumptionsTable(m)}
+      </div>
+
+      <div class="dsec">
+        <div class="dsec-hd"><span class="dsec-num">06</span><span class="dsec-title">Recommended Next Steps</span><div class="dsec-line"></div></div>
+        <div class="nsteps">
+          <div class="nstep"><div class="nstep-n">1</div><div><div class="nstep-title">Align with CFO on financial model</div><div class="nstep-desc">Share the CFO one-pager version of this document. The Low Adoption scenario (${pct(m.scenarios.low.roi)} ROI, ${m.scenarios.low.payback.toFixed(1)}-month payback) is designed to survive CFO scrutiny.</div></div></div>
+          <div class="nstep"><div class="nstep-n">2</div><div><div class="nstep-title">Define Year 1 success metrics</div><div class="nstep-desc">Establish 2–3 measurable outcomes: e.g., manager NPS, 90-day retention of new hires, employee engagement score. FranklinCovey will help instrument these.</div></div></div>
+          <div class="nstep"><div class="nstep-n">3</div><div><div class="nstep-title">Design the rollout cohort</div><div class="nstep-desc">Identify the first 50–100 employees for a high-visibility launch. HR and L&D should own the activation plan with FranklinCovey's implementation team.</div></div></div>
+        </div>
+      </div>
+
+    </div>
+    ${buildDocFooter(company, m, s)}`;
+  }
+
+  /* ── CEO SUMMARY ── */
+  else if(currentMode==='ceo'){
+    html = `
+    <div class="doc-hd">
+      <div class="doc-hd-inner">
+        <div class="doc-hd-accent"></div>
+        <div class="doc-hd-body">
+          <div style="display:flex;align-items:flex-start;justify-content:space-between;">
+            <div>
+              <div class="doc-eyebrow">CEO Executive Summary</div>
+              <div class="doc-company">${company}</div>
+              <div class="doc-tagline">FranklinCovey All Access Pass — Decision Brief</div>
+            </div>
+            ${confBadge}
+          </div>
+          <div class="doc-meta-row">
+            <div class="doc-meta-item"><span class="doc-meta-lbl">Prepared for</span><span class="doc-meta-val">${sponsor}</span></div>
+            <div class="doc-meta-item"><span class="doc-meta-lbl">Date</span><span class="doc-meta-val">${today()}</span></div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="doc-body">
+
+      <div class="dsec">
+        <div class="dsec-hd"><span class="dsec-num">—</span><span class="dsec-title">The Decision</span><div class="dsec-line"></div></div>
+        <div class="ceo-bullets">
+          <div class="ceo-bullet">
+            <div class="ceo-bullet-icon">🔴</div>
+            <div class="ceo-bullet-text"><strong>The cost of doing nothing is ${ff(m.coiTotal)} per year.</strong> ${company}'s current challenges — ${pains.map(p=>p.name).join(', ')} — are not abstract. They translate into lost productivity, avoidable attrition, and execution delay. Every quarter without action compounds this exposure.</div>
+          </div>
+          <div class="ceo-bullet">
+            <div class="ceo-bullet-icon">💡</div>
+            <div class="ceo-bullet-text"><strong>The All Access Pass costs ${ff(m.totalInvest)} per year — ${Math.round(m.totalInvest/m.coiTotal*100)}% of the problem it solves.</strong> At Moderate Adoption, the ${m.contractYrs}-year return is ${ff(m.scenarios.moderate.multiVal)} against a ${ff(m.totalMultiYr)} investment — a ${pct(m.scenarios.moderate.roi)} ROI. Even at Low Adoption: ${pct(m.scenarios.low.roi)} ROI, ${m.scenarios.low.payback.toFixed(1)}-month payback.</div>
+          </div>
+          <div class="ceo-bullet">
+            <div class="ceo-bullet-icon">⚡</div>
+            <div class="ceo-bullet-text"><strong>The investment pays back in ${m.scenarios.moderate.payback.toFixed(1)} months.</strong> Every month of delay costs approximately ${ff(m.coiTotal/12)}. The decision to act now vs. next quarter has a real dollar value.</div>
+          </div>
+          <div class="ceo-bullet">
+            <div class="ceo-bullet-icon">✅</div>
+            <div class="ceo-bullet-text"><strong>Recommended action: approve the ${ff(m.totalInvest)}/yr investment and authorize a 90-day pilot.</strong> The pilot is scoped to 30–50 employees, de-risks the full deployment decision, and produces measurable behavior-change data within one quarter.</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="dsec" style="margin-top:1.5rem;">
+        <div class="dsec-hd"><span class="dsec-num">—</span><span class="dsec-title">Numbers at a Glance</span><div class="dsec-line"></div></div>
+        <div class="metric-strip">
+          <div class="mcard primary">
+            <div class="mcard-lbl">Cost of Inaction</div>
+            <div class="mcard-val">${ff(m.coiTotal)}</div>
+            <div class="mcard-sub">per year, status quo</div>
+          </div>
+          <div class="mcard green">
+            <div class="mcard-lbl">Moderate Adoption ROI</div>
+            <div class="mcard-val">${pct(m.scenarios.moderate.roi)}</div>
+            <div class="mcard-sub">over ${m.contractYrs} years</div>
+          </div>
+          <div class="mcard gold">
+            <div class="mcard-lbl">Payback</div>
+            <div class="mcard-val">${m.scenarios.moderate.payback.toFixed(1)} mo</div>
+            <div class="mcard-sub">Year 1 investment recovered</div>
+          </div>
+          <div class="mcard plain">
+            <div class="mcard-lbl">Annual Investment</div>
+            <div class="mcard-val">${ff(m.totalInvest)}</div>
+            <div class="mcard-sub">${fmt(m.pricePerSeat)} / seat / yr</div>
+          </div>
+        </div>
+      </div>
+
+      ${failRisk?`<div class="dsec" style="margin-top:1.25rem;">
+        <div class="dsec-hd"><span class="dsec-num">—</span><span class="dsec-title">Stated Risk if Initiative Fails</span><div class="dsec-line"></div></div>
+        <div class="fail-block"><div class="fail-block-body">"${failRisk}"</div></div>
+      </div>`:''}
+
+    </div>
+    ${buildDocFooter(company, m, s)}`;
+  }
+
+  g('docOutput').innerHTML = html;
+}
+
+/* ── VALUE BREAKDOWN BARS ─────────────────────────── */
+function buildValueBreakdown(m, s){
+  const total = m.productivityVal + m.executionVal + m.retentionVal + m.leadershipVal;
+  if(total===0) return '';
+  function bar(label, val, cls){
+    if(!val) return '';
+    const pctW = Math.round((val/total)*100);
+    const capturedVal = val * SCEN_RATE[currentScenario];
+    return `<div class="vb-row">
+      <div class="vb-label">${label}</div>
+      <div class="vb-bar-wrap"><div class="vb-bar ${cls}" style="width:${pctW}%"></div></div>
+      <div class="vb-val">${ff(capturedVal)}</div>
+    </div>`;
+  }
+  return `<div class="vbreak">
+    <div style="font-size:.58rem;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--ink-light);margin-bottom:5px;">Direct Financial Impact</div>
+    ${bar('Retention',m.retentionVal,'retention')}
+    ${bar('Execution',m.executionVal,'execution')}
+    <div style="font-size:.58rem;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--ink-light);margin:10px 0 5px;">Behavioral / Productivity Impact</div>
+    ${bar('Productivity',m.productivityVal,'productivity')}
+    ${bar('Leadership',m.leadershipVal,'leadership')}
+    <div class="vb-row" style="border-top:1px solid var(--rule);padding-top:7px;margin-top:2px;">
+      <div class="vb-label" style="color:var(--ink-light);font-style:italic;">Overlap Adjustment (−20%)</div>
+      <div class="vb-bar-wrap"><div class="vb-bar" style="width:20%;background:var(--rule);"></div></div>
+      <div class="vb-val" style="color:var(--ink-light);">−${ff(m.overlapAdj * SCEN_RATE[currentScenario])}</div>
+    </div>
+  </div>
+  <div class="source-note" style="margin-top:.6rem;">To avoid overstating impact, overlapping effects across categories have been conservatively adjusted. Values shown at ${SCEN_LABEL[currentScenario]} adoption rate (${(SCEN_RATE[currentScenario]*100).toFixed(0)}%).</div>`;
+}
+
+/* ── ASSUMPTIONS TABLE ────────────────────────────── */
+function buildAssumptionsTable(m){
+  const rows = [
+    ['Employees in scope', m.employees.toLocaleString(), v('employees',0)>0?'user':'default', 'Provided by client'],
+    ['Avg. fully-loaded salary', fmt(m.salary), v('salary',0)>0?'user':'default', 'Includes benefits & payroll taxes (~1.3× base)'],
+    ['Voluntary turnover rate', pct(m.turnoverPct*100), v('turnover',0)>0?'user':'default', 'US average 16% (SHRM 2025)'],
+    ['Ramp time for new hire', m.rampMonths+' months', v('rampMonths',0)>0?'user':'default', 'Time to full productivity'],
+    ['Manager % of workforce', pct(m.mgrPct*100), v('mgrPct',0)>0?'user':'default', 'Influences leadership value driver'],
+    ['Revenue per employee', fmt(m.revPerEmp), m.revPerEmpEstimated?'default':'user', m.revPerEmpEstimated?'Revenue per employee estimated at 2.5× salary where not provided':'User-provided'],
+    ['Maturity multiplier', m.matMult+'×', 'user', MATURITY_LABEL[g('maturity').value]],
+    ['Low Adoption capture rate', '7%', 'default', 'Limited behavior change; typical floor for early deployments'],
+    ['Moderate Adoption capture rate', '12%', 'default', 'Consistent manager adoption; mid-point; clients commonly report 15–25%'],
+    ['Full Adoption capture rate', '18%', 'default', 'Organization-wide behavior shift; achievable with strong sponsorship'],
+    ['Execution improvement rate', '8%', 'default', 'Execution improvement assumption (8%) reflects conservative performance gains observed when organizations improve alignment, goal clarity, and accountability rhythms.'],
+    ['Replacement cost per exit', pct(75)+' of salary', 'default', 'SHRM 2025: range 50–200%; conservative 75% used'],
+    ['Preventable exits', '42% of total exits', 'default', 'Gallup 2025'],
+  ];
+  return `<table class="assump-table">
+    <thead><tr><th>Assumption</th><th>Value</th><th>Basis</th></tr></thead>
+    <tbody>${rows.map(([lbl,val,type,src])=>`
+      <tr><td>${lbl}</td><td class="${type}">${val}</td><td>${src}</td></tr>
+    `).join('')}</tbody>
+  </table>
+  <div class="source-note">Blue = user-provided input. Italic = default or estimated assumption. Sources: Gallup State of the Global Workplace 2025, SHRM Human Capital Benchmarking 2025, McKinsey, Harvard Business Review.</div>
+  <div class="source-note" style="margin-top:.4rem;">Cost of inaction reflects full turnover cost, while modeled value reflects only the preventable portion influenced by leadership and culture improvements.</div>`;
+}
+
+/* ── DOC FOOTER ───────────────────────────────────── */
+function buildDocFooter(company, m, s){
+  return `<div class="doc-actions">
+    <div class="doc-actions-left">FranklinCovey All Access Pass · franklincovey.com · Confidential · ${today()}</div>
+    <div class="doc-actions-right">
+      <button class="abtn abtn-ghost" id="copyBtn" onclick="copyText()">Copy as Text</button>
+      <button class="abtn abtn-ghost" onclick="exportEmail()">Export as Email</button>
+      <button class="abtn abtn-primary" onclick="window.print()">Print / Save PDF</button>
+    </div>
+  </div>`;
+}
+
+/* ── COPY AS TEXT ─────────────────────────────────── */
+function copyText(){
+  if(!lastResult) return;
+  const m = lastResult;
+  const s = m.scenarios[currentScenario];
+  const company = vt('companyName','Your Organization');
+  const pains = m.pains.map(id=>PAIN[id].name);
+
+  const text=`FRANKLINCOVEY ALL ACCESS PASS — BUSINESS CASE
+${company} | ${today()} | ${currentMode.toUpperCase()} VIEW
+${'='.repeat(56)}
+
+COST OF INACTION (Annual)
+  Total annual drag:        ${ff(m.coiTotal)}
+  Lost productivity:        ${ff(m.coiProductivity)}
+  Avoidable turnover:       ${ff(m.coiTurnover)}
+  Execution delay:          ${ff(m.coiExecution)}
+
+FINANCIAL IMPACT — ${SCEN_LABEL[currentScenario].toUpperCase()} SCENARIO
+  ${m.contractYrs}-Year Value:    ${ff(s.multiVal)}
+  ROI:               ${pct(s.roi)}
+  Payback:           ${s.payback.toFixed(1)} months
+  Value / Seat / Yr: ${ff(s.perSeat)}
+
+SCENARIOS
+  Low Adoption:      ${ff(m.scenarios.low.multiVal)} · ${pct(m.scenarios.low.roi)} ROI · ${m.scenarios.low.payback.toFixed(1)} mo payback
+  Moderate Adoption: ${ff(m.scenarios.moderate.multiVal)} · ${pct(m.scenarios.moderate.roi)} ROI · ${m.scenarios.moderate.payback.toFixed(1)} mo payback
+  Full Adoption:     ${ff(m.scenarios.full.multiVal)} · ${pct(m.scenarios.full.roi)} ROI · ${m.scenarios.full.payback.toFixed(1)} mo payback
+
+INVESTMENT
+  Seats:         ${m.employees.toLocaleString()}
+  Price/seat/yr: ${fmt(m.pricePerSeat)}
+  Annual:        ${ff(m.totalInvest)}
+  ${m.contractYrs}-Year total: ${ff(m.totalMultiYr)}
+
+PAIN POINTS: ${pains.join(', ')}
+PRIMARY DRIVER: ${m.primaryCat.toUpperCase()}
+CONFIDENCE: ${{low:'Assumption-Based',med:'Mixed Inputs',high:'Data-Backed'}[m.confidence]}
+
+Sources: Gallup 2025, SHRM 2025, HBR. All assumptions intentionally conservative.
+FranklinCovey All Access Pass | franklincovey.com`;
+
+  navigator.clipboard.writeText(text).then(()=>{
+    const btn=document.getElementById('copyBtn');
+    btn.classList.add('copied');
+    btn.textContent='✓ Copied!';
+    setTimeout(()=>{btn.classList.remove('copied');btn.textContent='Copy as Text';},2500);
+  });
+}
+
+/* ── EXPORT AS EMAIL ──────────────────────────────── */
+function exportEmail(){
+  if(!lastResult) return;
+  const m = lastResult;
+  const s = m.scenarios.moderate;
+  const company = vt('companyName','Your Organization');
+  const sponsor = vt('sponsorName','[Name]');
+  const pains = m.pains.map(id=>PAIN[id].name);
+
+  const email=`Subject: FranklinCovey All Access Pass — Business Case for ${company}
+
+${sponsor},
+
+Following our conversation, I've attached a business case for your review.
+
+The short version:
+
+The current challenges at ${company} — ${pains.join(', ')} — represent approximately ${ff(m.coiTotal)} in annual organizational drag. The FranklinCovey All Access Pass addresses these at the root-cause level.
+
+At the Moderate Adoption scenario, the ${m.contractYrs}-year return is ${ff(s.multiVal)} against a ${ff(m.totalMultiYr)} investment — a ${pct(s.roi)} ROI. Even at Low Adoption, payback is ${m.scenarios.low.payback.toFixed(1)} months.
+
+The attached one-pager walks through the full model, assumptions, and recommended next steps. I've kept all assumptions conservative and cited — the numbers are designed to hold up to CFO scrutiny.
+
+Happy to walk through the model together and refine any assumptions to reflect your specific context.
+
+Best,
+${vt('preparedBy','[Your Name]')}
+FranklinCovey | franklincovey.com`;
+
+  navigator.clipboard.writeText(email).then(()=>{
+    alert('Email template copied to clipboard. Paste into your email client.');
+  });
+}
+
+/* ── INIT ─────────────────────────────────────────── */
+maturityChanged();
+liveUpdate();
+</script>
+</body>
+</html>
