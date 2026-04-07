@@ -134,7 +134,19 @@ select{-webkit-appearance:none;appearance:none;cursor:pointer;
 .pchip input:checked+label .pchip-name{color:#fff;}
 .pchip input:checked+label .pchip-sub{color:rgba(255,255,255,.5);}
 
-/* maturity indicator */
+/* salary field locked state */
+#salary[readonly],#salary.salary-locked{background:var(--cream);color:var(--ink-mid);border-color:var(--rule);cursor:default;pointer-events:none;}
+
+/* workforce mix collapsible */
+.wmix-toggle{display:flex;align-items:center;gap:7px;cursor:pointer;user-select:none;padding:.5rem 0;margin-top:.25rem;}
+.wmix-toggle-label{font-size:.65rem;font-weight:600;color:var(--navy-light);letter-spacing:.02em;}
+.wmix-chevron{font-size:.6rem;color:var(--navy-light);transition:transform .2s;line-height:1;}
+.wmix-chevron.open{transform:rotate(90deg);}
+.wmix-body{display:none;margin-top:.6rem;}
+.wmix-body.open{display:block;}
+.wmix-group{background:var(--cream);border:1px solid var(--rule);border-radius:var(--r);padding:.7rem .85rem;margin-bottom:6px;}
+.wmix-group-label{font-size:.63rem;font-weight:600;color:var(--ink-mid);margin-bottom:.5rem;letter-spacing:.02em;}
+.wmix-note{font-size:.62rem;color:var(--fc-orange);font-weight:400;margin-top:.4rem;}
 .maturity-bar{display:flex;gap:4px;margin-top:6px;}
 .mb-seg{flex:1;height:4px;border-radius:2px;background:var(--rule);transition:background .2s;}
 .mb-seg.filled{background:var(--fc-orange);}
@@ -513,11 +525,74 @@ select{-webkit-appearance:none;appearance:none;cursor:pointer;
               <input type="number" id="employees" placeholder="250" min="10" oninput="liveUpdate()"/>
             </div>
             <div class="field">
-              <label>Avg Fully-Loaded Salary ($)</label>
+              <label id="salaryLabel">Avg Fully-Loaded Salary ($)</label>
               <div class="input-wrap has-pfx">
                 <span class="pfx">$</span>
-                <input type="number" id="salary" placeholder="85000" min="30000" oninput="liveUpdate()"/>
+                <input type="text" inputmode="numeric" id="salary" placeholder="85000" oninput="if(!this.readOnly)liveUpdate()"/>
               </div>
+              <div class="field-hint" id="salaryHint" style="display:none;color:var(--navy-light);">Calculated from workforce mix</div>
+            </div>
+          </div>
+
+          <!-- Workforce mix refinement -->
+          <div class="field">
+            <div class="wmix-toggle" onclick="toggleWmix()">
+              <span class="wmix-chevron" id="wmixChevron">▶</span>
+              <span class="wmix-toggle-label">Refine Workforce Mix <span class="optional-tag">optional</span></span>
+            </div>
+            <div class="wmix-body" id="wmixBody">
+              <div class="wmix-group">
+                <div class="wmix-group-label">Leaders</div>
+                <div class="field-row">
+                  <div class="field" style="margin-bottom:0;">
+                    <div class="input-wrap has-sfx">
+                      <input type="text" inputmode="numeric" id="leadersPct" placeholder="10" oninput="wmixUpdate()"/>
+                      <span class="sfx">%</span>
+                    </div>
+                  </div>
+                  <div class="field" style="margin-bottom:0;">
+                    <div class="input-wrap has-pfx">
+                      <span class="pfx">$</span>
+                      <input type="text" inputmode="numeric" id="leadersSalary" placeholder="160000" oninput="wmixUpdate()"/>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <div class="wmix-group">
+                <div class="wmix-group-label">Managers</div>
+                <div class="field-row">
+                  <div class="field" style="margin-bottom:0;">
+                    <div class="input-wrap has-sfx">
+                      <input type="text" inputmode="numeric" id="managersPct" placeholder="20" oninput="wmixUpdate()"/>
+                      <span class="sfx">%</span>
+                    </div>
+                  </div>
+                  <div class="field" style="margin-bottom:0;">
+                    <div class="input-wrap has-pfx">
+                      <span class="pfx">$</span>
+                      <input type="text" inputmode="numeric" id="managersSalary" placeholder="110000" oninput="wmixUpdate()"/>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <div class="wmix-group">
+                <div class="wmix-group-label">Individual Contributors</div>
+                <div class="field-row">
+                  <div class="field" style="margin-bottom:0;">
+                    <div class="input-wrap has-sfx">
+                      <input type="text" inputmode="numeric" id="icsPct" placeholder="70" oninput="wmixUpdate()"/>
+                      <span class="sfx">%</span>
+                    </div>
+                  </div>
+                  <div class="field" style="margin-bottom:0;">
+                    <div class="input-wrap has-pfx">
+                      <span class="pfx">$</span>
+                      <input type="text" inputmode="numeric" id="icsSalary" placeholder="75000" oninput="wmixUpdate()"/>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <div class="wmix-note" id="wmixNote" style="display:none;">Percentages must total 100 — adjust to apply blended salary.</div>
             </div>
           </div>
           <div class="field-row">
@@ -620,7 +695,7 @@ select{-webkit-appearance:none;appearance:none;cursor:pointer;
           <div class="fsec-title"><span class="step-badge">04</span>Investment Details</div>
           <div class="field-row">
             <div class="field">
-              <label>AAP Price per Seat / Yr ($)</label>
+              <label>Total Cost per Employee / Yr ($)</label>
               <div class="input-wrap has-pfx">
                 <span class="pfx">$</span>
                 <input type="number" id="pricePerSeat" placeholder="1500" min="500" oninput="liveUpdate()"/>
@@ -814,6 +889,62 @@ function updateConfPill(){
   const pill = g('confPill');
   pill.className = 'confidence-pill conf-'+c;
   pill.textContent = {low:'Assumption-Based',med:'Mixed Inputs',high:'Data-Backed'}[c];
+}
+
+/* ── WORKFORCE MIX ────────────────────────────────── */
+function toggleWmix(){
+  const open = document.getElementById('wmixBody').classList.toggle('open');
+  document.getElementById('wmixChevron').classList.toggle('open', open);
+}
+
+function wmixUpdate(){
+  const lPct = parseFloat(document.getElementById('leadersPct').value);
+  const mPct = parseFloat(document.getElementById('managersPct').value);
+  const iPct = parseFloat(document.getElementById('icsPct').value);
+  const lSal = parseFloat(document.getElementById('leadersSalary').value);
+  const mSal = parseFloat(document.getElementById('managersSalary').value);
+  const iSal = parseFloat(document.getElementById('icsSalary').value);
+
+  const allFilled = [lPct, mPct, iPct, lSal, mSal, iSal].every(n => !isNaN(n) && n > 0);
+
+  const salEl   = document.getElementById('salary');
+  const hint    = document.getElementById('salaryHint');
+  const note    = document.getElementById('wmixNote');
+  const lbl     = document.getElementById('salaryLabel');
+
+  if(!allFilled){
+    salEl.readOnly = false;
+    salEl.classList.remove('salary-locked');
+    hint.style.display = 'none';
+    note.style.display = 'none';
+    if(lbl) lbl.textContent = 'Avg Fully-Loaded Salary ($)';
+    liveUpdate();
+    return;
+  }
+
+  const total = lPct + mPct + iPct;
+  if(Math.round(total) !== 100){
+    salEl.readOnly = false;
+    salEl.classList.remove('salary-locked');
+    hint.style.display = 'none';
+    note.style.display = 'block';
+    if(lbl) lbl.textContent = 'Avg Fully-Loaded Salary ($)';
+    liveUpdate();
+    return;
+  }
+
+  // Valid mix — compute blend and write into salary field
+  note.style.display = 'none';
+  const blend = Math.round((lPct/100 * lSal) + (mPct/100 * mSal) + (iPct/100 * iSal));
+
+  salEl.readOnly = false;
+  salEl.value = String(blend);
+  salEl.readOnly = true;
+  salEl.classList.add('salary-locked');
+  hint.style.display = 'block';
+  if(lbl) lbl.textContent = 'Blended Avg Fully-Loaded Salary ($)';
+
+  liveUpdate();
 }
 
 /* ── CORE MODEL ───────────────────────────────────── */
@@ -1133,9 +1264,9 @@ function renderDoc(m){
             <div class="mcard-sub">Net ${ff(s.net)} over ${m.contractYrs} yrs</div>
           </div>
           <div class="mcard gold">
-            <div class="mcard-lbl">Value per Seat / Yr</div>
+            <div class="mcard-lbl">Value per Employee / Yr</div>
             <div class="mcard-val">${ff(s.perSeat)}</div>
-            <div class="mcard-sub">vs ${fmt(m.pricePerSeat)} investment</div>
+            <div class="mcard-sub">vs ${fmt(m.pricePerSeat)} cost per employee</div>
           </div>
           <div class="mcard plain">
             <div class="mcard-lbl">Payback Period</div>
@@ -1167,10 +1298,11 @@ function renderDoc(m){
         <div class="solution-block">
           <div class="solution-top">
             <span class="solution-title">FranklinCovey All Access Pass</span>
-            <span class="solution-badge">Unlimited Access · ${m.employees.toLocaleString()} Seats</span>
+            <span class="solution-badge">Unlimited Access · ${m.employees.toLocaleString()} Employees</span>
           </div>
           <div class="solution-body">
-            <p>The All Access Pass provides ${company} with unlimited access to FranklinCovey's entire content library — on-demand digital courses, live-online workshops, in-person sessions, and implementation tools — for every licensed employee. Unlike point solutions, the AAP is a holistic behavior-change platform that addresses the root causes identified above.</p>
+            <p>The All Access Pass provides ${company} with unlimited access to FranklinCovey's entire content library — on-demand digital courses, live-online workshops, in-person sessions, and implementation tools — for every enrolled employee. Unlike point solutions, the AAP is a holistic behavior-change platform that addresses the root causes identified above.</p>
+            <p style="font-size:.72rem;color:var(--ink-light);font-weight:300;margin-top:.25rem;">Includes platform access and supporting delivery components where applicable.</p>
             <p>${pains.map(p=>`<strong>${p.name}:</strong> ${p.fcSolution}`).join(' ')}</p>
           </div>
           <div class="pillars-grid" style="padding:0 1.1rem .9rem;">
@@ -1194,7 +1326,7 @@ function renderDoc(m){
         <div class="nsteps">
           <div class="nstep"><div class="nstep-n">1</div><div><div class="nstep-title">Executive Alignment Meeting</div><div class="nstep-desc">Schedule a 45-minute session with the executive sponsor to validate assumptions, confirm strategic fit, and gain verbal commitment to move forward.</div></div></div>
           <div class="nstep"><div class="nstep-n">2</div><div><div class="nstep-title">Stakeholder Discovery &amp; Success Metrics</div><div class="nstep-desc">Structured discovery with HR, L&D, and frontline leaders to establish baseline metrics and define what Year 1 success looks like.</div></div></div>
-          <div class="nstep"><div class="nstep-n">3</div><div><div class="nstep-title">90-Day Pilot Cohort</div><div class="nstep-desc">Scope a 30–50 person pilot to demonstrate measurable behavior change before full deployment — de-risks the investment decision.</div></div></div>
+          <div class="nstep"><div class="nstep-n">3</div><div><div class="nstep-title">90-Day Initial Activation Phase</div><div class="nstep-desc">Launch an initial 30–50 person activation phase to validate assumptions, build internal momentum, and accelerate broader adoption across the leadership population.</div></div></div>
           <div class="nstep"><div class="nstep-n">4</div><div><div class="nstep-title">Procurement &amp; Legal Review</div><div class="nstep-desc">FranklinCovey will provide a pre-negotiated MSA and procurement FAQ to accelerate legal review. Typical timeline: 2–3 weeks.</div></div></div>
         </div>
       </div>
@@ -1268,7 +1400,7 @@ function renderDoc(m){
           <div class="mcard green">
             <div class="mcard-lbl">Annual Investment</div>
             <div class="mcard-val">${ff(m.totalInvest)}</div>
-            <div class="mcard-sub">${fmt(m.pricePerSeat)} / seat / yr</div>
+            <div class="mcard-sub">${fmt(m.pricePerSeat)} cost per employee / yr</div>
           </div>
           <div class="mcard gold">
             <div class="mcard-lbl">Payback Period</div>
@@ -1276,9 +1408,9 @@ function renderDoc(m){
             <div class="mcard-sub">Recovered in Year 1</div>
           </div>
           <div class="mcard plain">
-            <div class="mcard-lbl">Value per Seat</div>
+            <div class="mcard-lbl">Value per Employee</div>
             <div class="mcard-val">${ff(m.scenarios.moderate.perSeat)}</div>
-            <div class="mcard-sub">annual return per license</div>
+            <div class="mcard-sub">annual return per employee</div>
           </div>
         </div>
       </div>
@@ -1288,6 +1420,7 @@ function renderDoc(m){
         <div class="narrative-block">
           <p>Point solutions — a single leadership workshop, a one-off training event — address symptoms. The challenges ${company} faces are systemic: they exist because people at every level lack a common language, a shared operating system, and consistent daily habits. You cannot fix a culture problem with a training event.</p>
           <p>The All Access Pass provides unlimited access across the full FranklinCovey library, enabling ${company} to deploy a consistent behavior-change platform across every cohort, level, and geography — without the cost of individual engagements. Key content: <strong>7 Habits</strong>, <strong>4 Disciplines of Execution</strong>, <strong>Speed of Trust</strong>, <strong>5 Choices</strong>, <strong>Leader in Me</strong>, and 30+ additional solutions.</p>
+          <p style="font-size:.72rem;color:var(--ink-light);font-weight:300;margin-top:.25rem;">Includes platform access and supporting delivery components where applicable.</p>
           <p>The model is designed to create compounding returns: as more employees adopt shared frameworks, the collaboration multiplier grows, trust increases, and execution velocity compounds — the ROI improves year over year.</p>
         </div>
       </div>
@@ -1302,7 +1435,7 @@ function renderDoc(m){
         <div class="nsteps">
           <div class="nstep"><div class="nstep-n">1</div><div><div class="nstep-title">Align with CFO on financial model</div><div class="nstep-desc">Share the CFO one-pager version of this document. The Low Adoption scenario (${pct(m.scenarios.low.roi)} ROI, ${m.scenarios.low.payback.toFixed(1)}-month payback) is designed to survive CFO scrutiny.</div></div></div>
           <div class="nstep"><div class="nstep-n">2</div><div><div class="nstep-title">Define Year 1 success metrics</div><div class="nstep-desc">Establish 2–3 measurable outcomes: e.g., manager NPS, 90-day retention of new hires, employee engagement score. FranklinCovey will help instrument these.</div></div></div>
-          <div class="nstep"><div class="nstep-n">3</div><div><div class="nstep-title">Design the rollout cohort</div><div class="nstep-desc">Identify the first 50–100 employees for a high-visibility launch. HR and L&D should own the activation plan with FranklinCovey's implementation team.</div></div></div>
+          <div class="nstep"><div class="nstep-n">3</div><div><div class="nstep-title">Design the Initial Activation Phase</div><div class="nstep-desc">Identify the first 50–100 employees for a high-visibility launch. HR and L&D should own the activation plan with FranklinCovey's implementation team.</div></div></div>
         </div>
       </div>
 
@@ -1351,7 +1484,7 @@ function renderDoc(m){
           </div>
           <div class="ceo-bullet">
             <div class="ceo-bullet-icon">✅</div>
-            <div class="ceo-bullet-text"><strong>Recommended action: approve the ${ff(m.totalInvest)}/yr investment and authorize a 90-day pilot.</strong> The pilot is scoped to 30–50 employees, de-risks the full deployment decision, and produces measurable behavior-change data within one quarter.</div>
+            <div class="ceo-bullet-text"><strong>Recommended action: approve the ${ff(m.totalInvest)}/yr investment and authorize a 90-day initial activation phase.</strong> The activation phase engages 30–50 employees to validate assumptions and build momentum for broader adoption across the leadership population.</div>
           </div>
         </div>
       </div>
@@ -1377,7 +1510,7 @@ function renderDoc(m){
           <div class="mcard plain">
             <div class="mcard-lbl">Annual Investment</div>
             <div class="mcard-val">${ff(m.totalInvest)}</div>
-            <div class="mcard-sub">${fmt(m.pricePerSeat)} / seat / yr</div>
+            <div class="mcard-sub">${fmt(m.pricePerSeat)} cost per employee / yr</div>
           </div>
         </div>
       </div>
@@ -1433,6 +1566,7 @@ function buildAssumptionsTable(m){
     ['Ramp time for new hire', m.rampMonths+' months', v('rampMonths',0)>0?'user':'default', 'Time to full productivity'],
     ['Manager % of workforce', pct(m.mgrPct*100), v('mgrPct',0)>0?'user':'default', 'Influences leadership value driver'],
     ['Revenue per employee', fmt(m.revPerEmp), m.revPerEmpEstimated?'default':'user', m.revPerEmpEstimated?'Revenue per employee estimated at 2.5× salary where not provided':'User-provided'],
+    ['Total cost per employee / yr', fmt(m.pricePerSeat), v('pricePerSeat',0)>0?'user':'default', 'Includes platform access and supporting delivery components where applicable'],
     ['Maturity multiplier', m.matMult+'×', 'user', MATURITY_LABEL[g('maturity').value]],
     ['Low Adoption capture rate', '7%', 'default', 'Limited behavior change; typical floor for early deployments'],
     ['Moderate Adoption capture rate', '12%', 'default', 'Consistent manager adoption; mid-point; clients commonly report 15–25%'],
@@ -1494,7 +1628,7 @@ SCENARIOS
 
 INVESTMENT
   Seats:         ${m.employees.toLocaleString()}
-  Price/seat/yr: ${fmt(m.pricePerSeat)}
+  Cost per employee/yr: ${fmt(m.pricePerSeat)}
   Annual:        ${ff(m.totalInvest)}
   ${m.contractYrs}-Year total: ${ff(m.totalMultiYr)}
 
