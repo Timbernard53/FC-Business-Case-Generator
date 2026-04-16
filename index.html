@@ -11,8 +11,9 @@
 ══════════════════════════════════════════════════════ */
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
 :root{
-  --navy:#0f2137; --navy-mid:#1a3a5c; --navy-light:#2563a8;
+  --navy:#0d1b2e; --navy-mid:#1a3a5c; --navy-light:#2563a8;
   --fc-orange:#e8622a; --fc-orange-light:#fdf1ec; --fc-orange-mid:#f5a07a;
+  --fc-blue:#3b82f6; --fc-blue-dark:#1d4ed8;
   --cream:#faf8f5; --white:#fff; --rule:#e4e0d8;
   --ink:#1a1a1a; --ink-mid:#4a4a4a; --ink-light:#888; --ink-faint:#bbb;
   --green:#1a6b45; --green-light:#eaf4ee; --green-mid:#2d9966;
@@ -28,9 +29,11 @@ body{font-family:'Inter',sans-serif;background:var(--cream);color:var(--ink);min
 ══════════════════════════════════════════════════════ */
 .header{background:var(--navy);overflow:hidden;}
 .header-inner{display:flex;align-items:stretch;min-height:88px;}
-.hbrand{background:var(--fc-orange);padding:1.1rem 1.6rem;display:flex;flex-direction:column;justify-content:center;min-width:185px;flex-shrink:0;}
-.hbrand-name{font-family:'Playfair Display',serif;font-size:1.15rem;color:#fff;font-weight:600;line-height:1.2;}
-.hbrand-sub{font-size:0.57rem;font-weight:500;letter-spacing:.15em;text-transform:uppercase;color:rgba(255,255,255,.65);margin-top:3px;}
+.hbrand{background:var(--navy);padding:1.1rem 1.8rem;display:flex;align-items:center;gap:14px;flex-shrink:0;border-right:1px solid rgba(255,255,255,.08);}
+.hbrand-logo{flex-shrink:0;}
+.hbrand-wordmark{display:flex;flex-direction:column;gap:1px;}
+.hbrand-name{font-family:'Inter',sans-serif;font-size:1.2rem;color:#fff;font-weight:700;letter-spacing:-.02em;line-height:1.15;}
+.hbrand-sub{font-size:0.55rem;font-weight:500;letter-spacing:.18em;text-transform:uppercase;color:rgba(255,255,255,.45);margin-top:1px;}
 .htitle{padding:1.1rem 2rem;display:flex;flex-direction:column;justify-content:center;flex:1;}
 .htitle h1{font-family:'Playfair Display',serif;font-size:1.35rem;color:#fff;font-weight:500;letter-spacing:-.01em;}
 .htitle p{font-size:0.68rem;color:rgba(255,255,255,.35);margin-top:4px;font-weight:300;letter-spacing:.04em;}
@@ -192,7 +195,7 @@ select{-webkit-appearance:none;appearance:none;cursor:pointer;
 /* doc header */
 .doc-hd{background:var(--navy);}
 .doc-hd-inner{display:flex;align-items:stretch;}
-.doc-hd-accent{background:var(--fc-orange);width:5px;flex-shrink:0;}
+.doc-hd-accent{background:var(--fc-blue);width:5px;flex-shrink:0;}
 .doc-hd-body{padding:1.5rem 1.85rem;flex:1;}
 .doc-eyebrow{font-size:.56rem;font-weight:600;letter-spacing:.18em;text-transform:uppercase;color:rgba(255,255,255,.35);margin-bottom:6px;}
 .doc-company{font-family:'Playfair Display',serif;font-size:1.85rem;color:#fff;font-weight:600;letter-spacing:-.02em;line-height:1.1;}
@@ -394,8 +397,29 @@ select{-webkit-appearance:none;appearance:none;cursor:pointer;
 <div class="header">
   <div class="header-inner">
     <div class="hbrand">
-      <div class="hbrand-name">FranklinCovey</div>
-      <div class="hbrand-sub">All Access Pass</div>
+      <!-- FC logo mark — diamond/compass shape matching brand -->
+      <div class="hbrand-logo">
+        <svg width="38" height="38" viewBox="0 0 38 38" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <defs>
+            <linearGradient id="lg1" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="#7ec8f7"/><stop offset="100%" stop-color="#2563c8"/></linearGradient>
+            <linearGradient id="lg2" x1="1" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#5aaef0"/><stop offset="100%" stop-color="#1d4ed8"/></linearGradient>
+            <linearGradient id="lg3" x1="0" y1="1" x2="1" y2="0"><stop offset="0%" stop-color="#3b82f6"/><stop offset="100%" stop-color="#93c5fd"/></linearGradient>
+            <linearGradient id="lg4" x1="1" y1="1" x2="0" y2="0"><stop offset="0%" stop-color="#1d4ed8"/><stop offset="100%" stop-color="#60a5fa"/></linearGradient>
+          </defs>
+          <!-- Top petal -->
+          <path d="M19 2 C19 2 13 10 13 19 C13 19 16 16 19 14 C22 16 25 19 25 19 C25 10 19 2 19 2Z" fill="url(#lg1)"/>
+          <!-- Right petal -->
+          <path d="M36 19 C36 19 28 13 19 13 C19 13 22 16 24 19 C22 22 19 25 19 25 C28 25 36 19 36 19Z" fill="url(#lg2)"/>
+          <!-- Bottom petal -->
+          <path d="M19 36 C19 36 25 28 25 19 C25 19 22 22 19 24 C16 22 13 19 13 19 C13 28 19 36 19 36Z" fill="url(#lg3)"/>
+          <!-- Left petal -->
+          <path d="M2 19 C2 19 10 25 19 25 C19 25 16 22 14 19 C16 16 19 13 19 13 C10 13 2 19 2 19Z" fill="url(#lg4)"/>
+        </svg>
+      </div>
+      <div class="hbrand-wordmark">
+        <div class="hbrand-name">FranklinCovey</div>
+        <div class="hbrand-sub">All Access Pass</div>
+      </div>
     </div>
     <div class="htitle">
       <h1>Business Case Generator</h1>
@@ -595,22 +619,13 @@ select{-webkit-appearance:none;appearance:none;cursor:pointer;
               <div class="wmix-note" id="wmixNote" style="display:none;">Percentages must total 100 — adjust to apply blended salary.</div>
             </div>
           </div>
-          <div class="field-row">
-            <div class="field">
-              <label>Revenue per Employee ($) <span class="optional-tag">optional</span></label>
-              <div class="input-wrap has-pfx">
-                <span class="pfx">$</span>
-                <input type="number" id="revPerEmp" placeholder="180000" oninput="liveUpdate()"/>
-              </div>
-              <div class="field-hint">Enables execution delay model</div>
+          <div class="field">
+            <label>Revenue per Employee ($) <span class="optional-tag">optional</span></label>
+            <div class="input-wrap has-pfx">
+              <span class="pfx">$</span>
+              <input type="number" id="revPerEmp" placeholder="180000" oninput="liveUpdate()"/>
             </div>
-            <div class="field">
-              <label>% of Workforce Managers</label>
-              <div class="input-wrap has-sfx">
-                <input type="number" id="mgrPct" placeholder="15" min="1" max="50" oninput="liveUpdate()"/>
-                <span class="sfx">%</span>
-              </div>
-            </div>
+            <div class="field-hint">Enables execution delay model</div>
           </div>
           <div class="field-row">
             <div class="field">
@@ -638,42 +653,42 @@ select{-webkit-appearance:none;appearance:none;cursor:pointer;
             <div class="pchip">
               <input type="checkbox" id="pp_prioritization" value="prioritization" checked onchange="liveUpdate()"/>
               <label for="pp_prioritization">
-                <div class="pchip-name">Poor Prioritization</div>
+                <div class="pchip-name">Focus &amp; Time Management</div>
                 <div class="pchip-sub">Productivity · 8% drag</div>
               </label>
             </div>
             <div class="pchip">
               <input type="checkbox" id="pp_reactive" value="reactive" checked onchange="liveUpdate()"/>
               <label for="pp_reactive">
-                <div class="pchip-name">Reactive Culture</div>
+                <div class="pchip-name">Strategic Bandwidth</div>
                 <div class="pchip-sub">Productivity · 10% drag</div>
               </label>
             </div>
             <div class="pchip">
               <input type="checkbox" id="pp_trust" value="trust" onchange="liveUpdate()"/>
               <label for="pp_trust">
-                <div class="pchip-name">Low Trust</div>
+                <div class="pchip-name">Trust &amp; Collaboration</div>
                 <div class="pchip-sub">Execution · 12% drag</div>
               </label>
             </div>
             <div class="pchip">
               <input type="checkbox" id="pp_execution" value="execution" onchange="liveUpdate()"/>
               <label for="pp_execution">
-                <div class="pchip-name">Weak Execution</div>
+                <div class="pchip-name">Execution Alignment</div>
                 <div class="pchip-sub">Execution · 9% drag</div>
               </label>
             </div>
             <div class="pchip">
               <input type="checkbox" id="pp_retention" value="retention" onchange="liveUpdate()"/>
               <label for="pp_retention">
-                <div class="pchip-name">High Turnover</div>
+                <div class="pchip-name">Talent Retention</div>
                 <div class="pchip-sub">Retention · 15% drag</div>
               </label>
             </div>
             <div class="pchip">
               <input type="checkbox" id="pp_leadership" value="leadership" onchange="liveUpdate()"/>
               <label for="pp_leadership">
-                <div class="pchip-name">Manager Quality</div>
+                <div class="pchip-name">Leadership Effectiveness</div>
                 <div class="pchip-sub">Leadership · 11% drag</div>
               </label>
             </div>
@@ -777,40 +792,40 @@ let lastResult = null;
 /* ── PAIN DATA ────────────────────────────────────── */
 const PAIN = {
   prioritization:{
-    name:'Poor Prioritization', category:'productivity', weight:.08,
-    desc:'Teams default to urgent, low-value work — leaving strategic initiatives perpetually deferred.',
+    name:'Focus & Time Management', category:'productivity', weight:.08,
+    desc:'Time and attention are concentrated on urgent, visible work — leaving high-value strategic initiatives under-resourced.',
     stat:'Employees operating reactively lose ~28% of productive output weekly (Gallup 2025).',
-    fcSolution:'The 7 Habits and 5 Choices frameworks provide every employee a repeatable system to reclaim Quadrant II time.'
+    fcSolution:'The 7 Habits and 5 Choices frameworks give every employee a repeatable system to protect time for Quadrant II work.'
   },
   reactive:{
-    name:'Reactive Culture', category:'productivity', weight:.10,
-    desc:'The organization perpetually firefights, crowding out the capability-building that drives long-term performance.',
+    name:'Strategic Bandwidth', category:'productivity', weight:.10,
+    desc:'The organization is stretched responding to immediate demands, limiting capacity for the capability-building that drives sustained performance.',
     stat:'Proactive-culture companies outperform reactive peers by 40% on growth (McKinsey).',
-    fcSolution:'FranklinCovey\'s culture methodology shifts teams from reactive to intentional at scale.'
+    fcSolution:'FranklinCovey\'s culture methodology shifts teams from reactive to intentional execution at scale.'
   },
   trust:{
-    name:'Low Organizational Trust', category:'execution', weight:.12,
-    desc:'Cross-functional friction, slow decisions, and high coordination costs create a "trust tax" on every initiative.',
-    stat:'Low-trust organizations pay 20–40% more in time and cost on every cross-functional transaction (Covey & Merrill).',
-    fcSolution:'The Speed of Trust curriculum gives leaders measurable behaviors to reduce coordination cost.'
+    name:'Trust & Collaboration', category:'execution', weight:.12,
+    desc:'Cross-functional coordination carries a cost premium — slower decisions, higher friction, and reduced speed to market on shared initiatives.',
+    stat:'Organizations with lower trust pay 20–40% more in time and cost on every cross-functional transaction (Covey & Merrill).',
+    fcSolution:'The Speed of Trust curriculum gives leaders concrete behaviors to measurably reduce coordination cost.'
   },
   execution:{
-    name:'Strategy-Execution Gap', category:'execution', weight:.09,
-    desc:'Strategic priorities don\'t cascade to front-line behavior. Goals exist at the leadership level but not in daily work.',
-    stat:'67% of strategic plans never fully execute due to poor goal alignment (HBR).',
-    fcSolution:'4 Disciplines of Execution (WIGs, lead measures, scoreboard, accountability rhythm) closes the gap operationally.'
+    name:'Execution Alignment', category:'execution', weight:.09,
+    desc:'Strategic priorities are not consistently translating into daily behavior and measurable outcomes at the team level.',
+    stat:'67% of strategic plans never fully execute due to goal alignment gaps (HBR).',
+    fcSolution:'4 Disciplines of Execution (WIGs, lead measures, scoreboard, accountability rhythm) closes the strategy-to-action gap.'
   },
   retention:{
-    name:'High Voluntary Turnover', category:'retention', weight:.15,
-    desc:'Above-benchmark attrition is inflating recruiting and onboarding costs while depleting institutional knowledge.',
+    name:'Talent Retention', category:'retention', weight:.15,
+    desc:'Voluntary attrition is creating recurring costs in recruiting, onboarding, and productivity ramp while reducing institutional knowledge.',
     stat:'Replacement cost: 50–200% of annual salary (SHRM 2025). 42% of exits are preventable (Gallup 2025).',
     fcSolution:'Leadership and engagement content directly addresses the #1 driver of exits: the manager relationship. A portion of turnover is driven by manager effectiveness, which is directly addressed through leadership development.'
   },
   leadership:{
-    name:'Manager Effectiveness', category:'leadership', weight:.11,
-    desc:'Frontline managers lack coaching, prioritization, and engagement skills to retain and develop their teams.',
+    name:'Leadership Effectiveness', category:'leadership', weight:.11,
+    desc:'Frontline leaders have significant opportunity to strengthen their coaching, prioritization, and team development skills.',
     stat:'70% of team engagement variance is attributable to the manager (Gallup 2025).',
-    fcSolution:'Leader In Me and manager effectiveness content gives every people leader a consistent operating system.'
+    fcSolution:'Leader In Me and manager effectiveness content gives every people leader a consistent, scalable operating system.'
   }
 };
 
@@ -875,7 +890,6 @@ function confidenceScore(){
   if(v('pricePerSeat',0)>0) userProvided++;
   if(v('turnover',0)>0) userProvided++;
   if(v('revPerEmp',0)>0) userProvided++;
-  if(v('mgrPct',0)>0) userProvided++;
   // >50% default/estimated = assumption-based
   if(userProvided<=2) return 'low';
   // some real data, some estimates = mixed
@@ -954,7 +968,6 @@ function buildModel(){
   const revPerEmpRaw   = v('revPerEmp',0);
   const revPerEmpEstimated = revPerEmpRaw === 0;
   const revPerEmp = revPerEmpRaw > 0 ? revPerEmpRaw : salary * 2.5;
-  const mgrPct      = v('mgrPct',15)/100;
   const turnoverPct = v('turnover',16)/100;
   const rampMonths  = v('rampMonths',4);
   const pricePerSeat= v('pricePerSeat',1500);
@@ -962,7 +975,6 @@ function buildModel(){
   const matMult     = MATURITY_MULT[g('maturity').value||'defined'];
 
   const totalPayroll  = employees * salary;
-  const managers      = Math.round(employees * mgrPct);
   const totalInvest   = employees * pricePerSeat;
   const totalMultiYr  = totalInvest * contractYrs;
 
@@ -1026,16 +1038,16 @@ function buildModel(){
 
   // Pain-to-category desc
   const catDesc = {
-    productivity:'Productivity Loss — employees spending time on low-value, reactive work instead of strategic output.',
-    execution:'Execution Delay — strategy not translating into daily behavior, costing speed and revenue.',
-    retention:'Avoidable Turnover — recruiting, onboarding, and ramp costs from preventable exits.',
-    leadership:'Manager Effectiveness — team output suppressed by undertrained frontline leaders.'
+    productivity:'Productivity Opportunity — time and attention concentrated on reactive work rather than strategic output.',
+    execution:'Execution Alignment — strategy not consistently translating into daily team behavior and measurable outcomes.',
+    retention:'Talent Retention — recruiting, onboarding, and ramp costs from preventable exits.',
+    leadership:'Leadership Effectiveness — team performance and engagement influenced by frontline leader development.'
   };
 
   return {
     // inputs
-    employees, salary, revPerEmp, revPerEmpEstimated, mgrPct, turnoverPct, rampMonths,
-    pricePerSeat, contractYrs, managers, matMult,
+    employees, salary, revPerEmp, revPerEmpEstimated, turnoverPct, rampMonths,
+    pricePerSeat, contractYrs, matMult,
     totalPayroll, totalInvest, totalMultiYr,
     // model
     cats, grossVal, grossValPreOverlap, overlapAdj,
@@ -1185,6 +1197,7 @@ function renderDoc(m){
             <div class="doc-meta-item"><span class="doc-meta-lbl">Employees in scope</span><span class="doc-meta-val">${m.employees.toLocaleString()}</span></div>
             <div class="doc-meta-item"><span class="doc-meta-lbl">Annual investment</span><span class="doc-meta-val">${ff(m.totalInvest)}</span></div>
           </div>
+          <div style="margin-top:.75rem;padding-top:.75rem;border-top:1px solid rgba(255,255,255,.08);font-size:.57rem;color:rgba(255,255,255,.28);font-style:italic;line-height:1.5;">This model estimates economic exposure and potential impact. It is not a financial forecast or guarantee of results.</div>
         </div>
       </div>
     </div>
@@ -1194,7 +1207,8 @@ function renderDoc(m){
       <div class="dsec">
         <div class="dsec-hd"><span class="dsec-num">01</span><span class="dsec-title">The Problem — Quantified</span><div class="dsec-line"></div></div>
         <div class="prob-block">
-          <p>${STRAT_COPY[strat]} ${company}'s ${m.employees.toLocaleString()} employees are currently affected by <strong>${pains.length} compounding challenge${pains.length>1?'s':''}</strong>: ${pains.map(p=>'<strong>'+p.name+'</strong>').join(', ')}. The primary value driver is <strong>${m.catDesc[m.primaryCat]}</strong>${m.secondaryCat?' The secondary driver is '+m.catDesc[m.secondaryCat]:''}</p>
+          <p>${STRAT_COPY[strat]} ${company}'s ${m.employees.toLocaleString()} employees are currently affected by <strong>${pains.length} compounding challenge${pains.length>1?'s':''}</strong>: ${pains.map(p=>'<strong>'+p.name+'</strong>').join(', ')}. The primary economic driver is <strong>${m.catDesc[m.primaryCat]}</strong>${m.secondaryCat?' A secondary driver is '+m.catDesc[m.secondaryCat]+'.':''}</p>
+          <p style="font-size:.78rem;color:var(--ink-mid);margin-top:.6rem;padding-top:.6rem;border-top:1px solid rgba(232,98,42,.15);font-weight:400;">The case for action is anchored on <strong style="color:var(--fc-orange);">${m.primaryCat.charAt(0).toUpperCase()+m.primaryCat.slice(1)}</strong> — the highest-confidence value driver given the challenges identified and the organization's current maturity level.</p>
         </div>
         <div class="drivers-row">
           <div class="driver-card primary">
@@ -1229,6 +1243,8 @@ function renderDoc(m){
             ${m.cats.execution>0?`<div class="coi-row"><span class="coi-row-label">Delayed execution / revenue drag</span><span class="coi-row-val">${ff(m.coiExecution)}</span></div>`:''}
             <div class="coi-footnote">This represents ongoing annual loss. The proposed investment addresses only a fraction of this exposure.</div>
             <div class="coi-footnote" style="margin-top:.3rem;">Leadership effectiveness is embedded within productivity and turnover impacts.</div>
+            <div class="coi-footnote" style="margin-top:.3rem;">Categories are directional and may have partial overlap; estimates are intentionally conservative.</div>
+            <div class="coi-footnote" style="margin-top:.3rem;">Delaying action preserves current cost exposure without reducing the business risk behind it.</div>
             <div class="coi-footnote" style="margin-top:.4rem;border-top:1px solid rgba(176,48,48,.1);padding-top:.4rem;">How this was calculated:
               <br>· Productivity loss = payroll × productivity drag × maturity factor
               <br>· Turnover cost = exits × replacement cost + lost productivity during ramp
@@ -1542,19 +1558,22 @@ function buildValueBreakdown(m, s){
     </div>`;
   }
   return `<div class="vbreak">
-    <div style="font-size:.58rem;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--ink-light);margin-bottom:5px;">Direct Financial Impact</div>
-    ${bar('Retention',m.retentionVal,'retention')}
-    ${bar('Execution',m.executionVal,'execution')}
-    <div style="font-size:.58rem;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--ink-light);margin:10px 0 5px;">Behavioral / Productivity Impact</div>
-    ${bar('Productivity',m.productivityVal,'productivity')}
-    ${bar('Leadership',m.leadershipVal,'leadership')}
+    <div style="font-size:.58rem;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--green);margin-bottom:5px;">Hard Savings — Direct Cost Avoidance</div>
+    ${bar('Talent Retention (hard savings)',m.retentionVal,'retention')}
+    <div style="font-size:.58rem;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--navy-mid);margin:10px 0 5px;">Operational Value — Performance Improvement</div>
+    ${bar('Focus & Time Management',m.productivityVal,'productivity')}
+    ${bar('Strategy Execution',m.executionVal,'execution')}
+    ${bar('Leadership Effectiveness',m.leadershipVal,'leadership')}
     <div class="vb-row" style="border-top:1px solid var(--rule);padding-top:7px;margin-top:2px;">
       <div class="vb-label" style="color:var(--ink-light);font-style:italic;">Overlap Adjustment (−20%)</div>
       <div class="vb-bar-wrap"><div class="vb-bar" style="width:20%;background:var(--rule);"></div></div>
       <div class="vb-val" style="color:var(--ink-light);">−${ff(m.overlapAdj * SCEN_RATE[currentScenario])}</div>
     </div>
   </div>
-  <div class="source-note" style="margin-top:.6rem;">To avoid overstating impact, overlapping effects across categories have been conservatively adjusted. Values shown at ${SCEN_LABEL[currentScenario]} adoption rate (${(SCEN_RATE[currentScenario]*100).toFixed(0)}%).</div>`;
+  <div class="source-note" style="margin-top:.6rem;">To avoid overstating impact, overlapping effects across categories have been conservatively adjusted. Values shown at ${SCEN_LABEL[currentScenario]} adoption rate (${(SCEN_RATE[currentScenario]*100).toFixed(0)}%).</div>
+  <div class="source-note" style="margin-top:.3rem;">Value reflects partial realization of modeled improvements and does not assume full attribution to a single initiative.</div>
+  <div class="source-note" style="margin-top:.3rem;">Hard savings often appear earlier, while broader productivity and execution gains compound over time.</div>
+  <div class="source-note" style="margin-top:.3rem;">At smaller cohort sizes, the objective is often validation of impact before broader economic capture.</div>`;
 }
 
 /* ── ASSUMPTIONS TABLE ────────────────────────────── */
@@ -1564,7 +1583,6 @@ function buildAssumptionsTable(m){
     ['Avg. fully-loaded salary', fmt(m.salary), v('salary',0)>0?'user':'default', 'Includes benefits & payroll taxes (~1.3× base)'],
     ['Voluntary turnover rate', pct(m.turnoverPct*100), v('turnover',0)>0?'user':'default', 'US average 16% (SHRM 2025)'],
     ['Ramp time for new hire', m.rampMonths+' months', v('rampMonths',0)>0?'user':'default', 'Time to full productivity'],
-    ['Manager % of workforce', pct(m.mgrPct*100), v('mgrPct',0)>0?'user':'default', 'Influences leadership value driver'],
     ['Revenue per employee', fmt(m.revPerEmp), m.revPerEmpEstimated?'default':'user', m.revPerEmpEstimated?'Revenue per employee estimated at 2.5× salary where not provided':'User-provided'],
     ['Total cost per employee / yr', fmt(m.pricePerSeat), v('pricePerSeat',0)>0?'user':'default', 'Includes platform access and supporting delivery components where applicable'],
     ['Maturity multiplier', m.matMult+'×', 'user', MATURITY_LABEL[g('maturity').value]],
